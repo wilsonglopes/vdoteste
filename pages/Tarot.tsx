@@ -12,11 +12,11 @@ import { consumeCredit } from '../services/userService';
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// Componentes das Etapas
+// Componentes das Etapas (Modular)
 import QuestionStep from '../components/tarot/QuestionStep';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
-import SpreadSelection from '../components/tarot/SpreadSelection';
+import SpreadSelection from '../components/tarot/SpreadSelection'; // <--- IMPORTANTE: Garante que este arquivo existe
 
 const LOCAL_KEY = 'vozes_tarot_state_v1';
 
@@ -35,7 +35,7 @@ const Tarot: React.FC = () => {
     resetTarot
   } = useTarotStore();
 
-  // --- CÁLCULO DE CARTAS ---
+  // Define quantas cartas serão usadas baseado no jogo escolhido
   const currentSpread = SPREADS[selectedSpreadId as keyof typeof SPREADS] || SPREADS['mesa_real'];
   const CARDS_TARGET = currentSpread.cardsCount;
 
@@ -105,14 +105,14 @@ const Tarot: React.FC = () => {
     initializeDeck();
     mountedRef.current = true;
 
+    // Recupera estado ou inicia na seleção de jogo
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.step) setStep(parsed.step);
-        // Se não tinha passo salvo, vai para escolha
       } else {
-        setStep('spread_selection');
+        setStep('spread_selection'); // <--- FORÇA O INÍCIO NA ESCOLHA
       }
     } catch (e) { }
 
@@ -139,29 +139,25 @@ const Tarot: React.FC = () => {
   }, [revealedCount]);
 
 
-  // --- 2. NAVEGAÇÃO (AQUI ESTÁ A CORREÇÃO) ---
+  // --- 2. NAVEGAÇÃO CORRIGIDA ---
 
   const handleStepBack = () => {
     if (step === 'question') {
-      // CORREÇÃO: Voltar da Pergunta -> Vai para ESCOLHA DE TIRAGEM
-      setQuestion(''); // Limpa a pergunta se quiser (opcional)
+      // AGORA VOLTA PARA A ESCOLHA DO JOGO
       setStep('spread_selection');
     } else if (step === 'selection') {
-      // Voltar da Seleção -> Vai para PERGUNTA
       setQuestion(''); 
       setSelectedCards([]); 
-      initializeDeck(); 
+      initializeDeck();
       setStep('question');
     } else if (step === 'reveal' || step === 'result') {
-      // Voltar da Mesa -> Vai para SELEÇÃO
       setSelectedCards([]); 
       setRevealedLocal(0);
       setRevealedCount(0);
       initializeDeck(); 
       setStep('selection');
     } else if (step === 'spread_selection') {
-      // Voltar da Escolha -> Vai para HOME
-      handleNewReading();
+      // Se voltar da escolha, vai para Home
       navigate('/');
     }
   };
@@ -178,7 +174,7 @@ const Tarot: React.FC = () => {
     setStep('reveal');
   };
 
-  // --- 3. LÓGICA CORE ---
+  // --- 3. LÓGICA DE REVELAÇÃO ---
   const revealingRef = useRef(false);
 
   const startReveal = async () => {
@@ -271,12 +267,11 @@ const Tarot: React.FC = () => {
         }}
       />
 
-      {/* PASSO 0: ESCOLHA DO JOGO */}
+      {/* PASSO 0: ESCOLHA DO JOGO (ADICIONADO) */}
       {step === 'spread_selection' && (
         <SpreadSelection />
       )}
 
-      {/* PASSO 1: PERGUNTA */}
       {step === 'question' && (
         <QuestionStep 
           question={question}
@@ -286,7 +281,6 @@ const Tarot: React.FC = () => {
         />
       )}
 
-      {/* PASSO 2: SELEÇÃO DE CARTAS */}
       {step === 'selection' && (
         <SelectionStep 
           availableCards={availableCards}
@@ -301,7 +295,6 @@ const Tarot: React.FC = () => {
         />
       )}
 
-      {/* PASSO 3: MESA / RESULTADO */}
       {(step === 'reveal' || step === 'result') && (
         <ReadingStep 
           question={question}
