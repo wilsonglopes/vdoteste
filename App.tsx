@@ -10,6 +10,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import LandingPage from './pages/LandingPage'; // <--- 1. Importar Landing Page
 import Vendas from './pages/Vendas';
 import { supabase } from './services/supabase';
+import SelectSpread from './pages/SelectSpread';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -51,6 +52,7 @@ const App: React.FC = () => {
         <Routes>
           {/* Rota Principal (App) */}
           <Route path="/" element={<Home user={session?.user} />} />
+          <Route path="/escolher" element={<SelectSpread />} />
           
           {/* Rota de Vendas (Landing Page) */}
           <Route path="/landingpage" element={<LandingPage />} />
