@@ -16,10 +16,9 @@ import AuthModal from '../components/AuthModal';
 import QuestionStep from '../components/tarot/QuestionStep';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
-import SpreadSelection from '../components/tarot/SpreadSelection'; // Certifique-se que este arquivo existe
+import SpreadSelection from '../components/tarot/SpreadSelection';
 
-// MUDANÇA CRÍTICA: Alterei a chave para v2 para limpar o cache antigo do navegador
-const LOCAL_KEY = 'vozes_tarot_state_v2';
+const LOCAL_KEY = 'vozes_tarot_state_v2'; // Mantenha v2 para limpar cache antigo
 
 const Tarot: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +32,8 @@ const Tarot: React.FC = () => {
     revealedCount, setRevealedCount,
     reading, setReading,
     isLoadingAI, setLoadingAI,
-    resetTarot
+    resetTarot,
+    setSpread // Precisamos expor o setSpread se quisermos resetar específico
   } = useTarotStore();
 
   // --- CÁLCULO DE CARTAS ---
@@ -57,10 +57,7 @@ const Tarot: React.FC = () => {
   // --- 1. INICIALIZAÇÃO E SETUP ---
 
   const handleNewReading = () => {
-    abortRevealRef.current.aborted = true;
-    if (typeof resetTarot === 'function') resetTarot();
-    abortRevealRef.current.aborted = false;
-    
+    // Reseta tudo para o estado inicial LIMPO
     setHoveredCardId(null);
     setQuestion(''); 
     setSelectedCards([]); 
@@ -69,7 +66,7 @@ const Tarot: React.FC = () => {
     setReading(null);
     setLoadingAI(false);
     
-    // FORÇA VOLTAR PARA A ESCOLHA
+    // IMPORTANTE: Volta para a seleção de jogo
     setStep('spread_selection');
     
     initializeDeck();
@@ -109,15 +106,20 @@ const Tarot: React.FC = () => {
     initializeDeck();
     mountedRef.current = true;
 
-    // RECUPERAÇÃO DE ESTADO (COM CORREÇÃO)
+    // LÓGICA DE RECUPERAÇÃO CORRIGIDA
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Se existe estado salvo, restaura
-        if (parsed.step) setStep(parsed.step);
+        // Se o usuário estava no meio de algo, restaura.
+        if (parsed.step && parsed.step !== 'spread_selection') {
+           setStep(parsed.step);
+        } else {
+           // Se estava no início ou vazio, força a escolha
+           setStep('spread_selection');
+        }
       } else {
-        // Se não existe (novo usuário ou cache limpo), VAI PARA SPREAD_SELECTION
+        // Novo acesso: força escolha
         setStep('spread_selection');
       }
     } catch (e) { 
@@ -147,25 +149,28 @@ const Tarot: React.FC = () => {
   }, [revealedCount]);
 
 
-  // --- 2. NAVEGAÇÃO ---
+  // --- 2. NAVEGAÇÃO (BOTÃO VOLTAR) ---
 
   const handleStepBack = () => {
     if (step === 'question') {
-      // DA PERGUNTA VOLTA PARA A ESCOLHA
-      setQuestion('');
-      setStep('spread_selection');
+      // ESTAVA NA PERGUNTA -> QUER TROCAR O JOGO
+      setQuestion(''); 
+      setStep('spread_selection'); // Volta para os cards de escolha
     } else if (step === 'selection') {
+      // ESTAVA ESCOLHENDO CARTAS -> QUER MUDAR A PERGUNTA
       setQuestion(''); 
       setSelectedCards([]); 
       initializeDeck();
       setStep('question');
     } else if (step === 'reveal' || step === 'result') {
+      // ESTAVA NO RESULTADO -> QUER REESCOLHER AS CARTAS (MESMO JOGO)
       setSelectedCards([]); 
       setRevealedLocal(0);
       setRevealedCount(0);
       initializeDeck(); 
       setStep('selection');
     } else if (step === 'spread_selection') {
+      // ESTAVA NA ESCOLHA -> VAI EMBORA
       navigate('/');
     }
   };
@@ -199,7 +204,7 @@ const Tarot: React.FC = () => {
       if (creditCheck.message === 'no_credits') {
         setShowPlans(true);
       } else {
-        alert(creditCheck.message);
+        alert(creditCheck.message || "Erro ao verificar créditos.");
       }
       return;
     }
@@ -249,7 +254,7 @@ const Tarot: React.FC = () => {
 
   // --- 4. RENDERIZAÇÃO ---
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4 w-full flex flex-col items-center relative overflow-x-hidden scrollbar-hide">
+    <div className="max-w-4xl mx-auto py-6 px-4 min-h-screen flex flex-col items-center relative w-full overflow-x-hidden scrollbar-hide">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
@@ -275,7 +280,6 @@ const Tarot: React.FC = () => {
         }}
       />
 
-      {/* AQUI ESTÁ A TELA QUE ESTAVA FALTANDO */}
       {step === 'spread_selection' && (
         <SpreadSelection />
       )}
@@ -285,7 +289,7 @@ const Tarot: React.FC = () => {
           question={question}
           setQuestion={setQuestion}
           onNext={() => setStep('selection')}
-          onBack={handleStepBack}
+          onBack={handleStepBack} // Passa a função corrigida
         />
       )}
 
@@ -313,7 +317,7 @@ const Tarot: React.FC = () => {
           user={user}
           onReveal={startReveal}
           onBack={handleStepBack}
-          onGoHome={() => { handleNewReading(); navigate('/'); }}
+          onGoHome={() => { handleNewReading(); navigate('/'); }} // Agora reseta tudo
           onNewReading={handleNewReading}
         />
       )}
