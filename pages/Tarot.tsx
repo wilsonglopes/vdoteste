@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+// Importamos SPREADS para ler as regras de cada jogo
 import { DECK_SIZE, CARD_NAMES, SPREADS } from '../constants';
 import { getTarotReading } from '../services/geminiService';
 import { useTarotStore } from '../store/tarotStore';
@@ -12,11 +13,11 @@ import { consumeCredit } from '../services/userService';
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// Componentes das Etapas
+// Componentes das Etapas (Modular)
 import QuestionStep from '../components/tarot/QuestionStep';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
-import SpreadSelection from '../components/tarot/SpreadSelection'; // <--- NOVO COMPONENTE
+import SpreadSelection from '../components/tarot/SpreadSelection'; // <--- NOVO: Tela de escolha
 
 const LOCAL_KEY = 'vozes_tarot_state_v1';
 
@@ -26,7 +27,7 @@ const Tarot: React.FC = () => {
   // --- STORE GLOBAL ---
   const {
     step, setStep,
-    selectedSpreadId, // <--- Pegamos qual jogo foi escolhido
+    selectedSpreadId, // <--- Pegamos qual jogo o usuário escolheu
     question, setQuestion,
     selectedCards, setSelectedCards,
     revealedCount, setRevealedCount,
@@ -35,9 +36,10 @@ const Tarot: React.FC = () => {
     resetTarot
   } = useTarotStore();
 
-  // --- CÁLCULO DE CARTAS DO JOGO ATUAL ---
+  // --- LÓGICA DINÂMICA ---
+  // Define quantas cartas o jogo atual exige (5, 7, 6 ou 9)
   const currentSpread = SPREADS[selectedSpreadId as keyof typeof SPREADS] || SPREADS['mesa_real'];
-  const CARDS_TARGET = currentSpread.cardsCount; // Ex: 5, 7 ou 9
+  const CARDS_TARGET = currentSpread.cardsCount;
 
   // --- ESTADOS LOCAIS ---
   const [deck, setDeck] = useState<CardData[]>([]);
@@ -47,6 +49,7 @@ const Tarot: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   
   const [revealedLocal, setRevealedLocal] = useState<number>(revealedCount || 0);
+  
   const [showPlans, setShowPlans] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
@@ -105,17 +108,15 @@ const Tarot: React.FC = () => {
     initializeDeck();
     mountedRef.current = true;
 
+    // Recupera estado salvo
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.step) setStep(parsed.step); // Restaura o passo
-        if (parsed.selectedSpreadId && setStep) { 
-             // Se já tinha jogo escolhido mas o passo era undefined, restaura fluxo
-        }
-        // ... (restauração dos outros estados já feita pelo store)
+        if (parsed.step) setStep(parsed.step);
+        // Se já tem algo salvo, mantém.
       } else {
-        // Se não tem estado salvo, começa na escolha
+        // Se não tem nada salvo, começa na escolha do jogo
         setStep('spread_selection');
       }
     } catch (e) { }
@@ -127,8 +128,8 @@ const Tarot: React.FC = () => {
     };
   }, []);
 
-  // Salva o 'selectedSpreadId' também no local storage
   useEffect(() => {
+    // Salva também o 'selectedSpreadId' para persistir a escolha do jogo
     const toStore = { question, selectedCards, step, revealedCount: revealedLocal, reading, isLoadingAI, selectedSpreadId };
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(toStore)); } catch (e) {}
   }, [question, selectedCards, step, revealedLocal, reading, isLoadingAI, selectedSpreadId]);
@@ -143,7 +144,7 @@ const Tarot: React.FC = () => {
     if (typeof revealedCount === 'number') setRevealedLocal(revealedCount);
   }, [revealedCount]);
 
-  // --- 2. NAVEGAÇÃO ---
+  // --- 2. NAVEGAÇÃO (FLUXO NOVO) ---
 
   const handleStepBack = () => {
     if (step === 'question') {
@@ -151,10 +152,12 @@ const Tarot: React.FC = () => {
       setQuestion('');
       setStep('spread_selection');
     } else if (step === 'selection') {
+      // Voltar da seleção -> Pergunta
       setQuestion(''); 
       setSelectedCards([]); 
       setStep('question');
     } else if (step === 'reveal' || step === 'result') {
+      // Voltar da mesa -> Seleção
       setSelectedCards([]); 
       setRevealedLocal(0);
       setRevealedCount(0);
@@ -162,12 +165,14 @@ const Tarot: React.FC = () => {
       setStep('selection');
     } else if (step === 'spread_selection') {
       // Voltar da escolha -> Home
+      handleNewReading();
       navigate('/');
     }
   };
 
   const handleCardSelect = (card: CardData) => {
-    if (selectedCards.length >= CARDS_TARGET) return; // Limite dinâmico
+    // Usa o limite dinâmico (CARDS_TARGET) em vez do fixo (9)
+    if (selectedCards.length >= CARDS_TARGET) return;
     if (selectedCards.find(c => c.id === card.id)) return;
     setSelectedCards([...selectedCards, card]);
   };
@@ -207,7 +212,7 @@ const Tarot: React.FC = () => {
       setRevealedLocal(0);
       setRevealedCount(0);
 
-      // Loop dinâmico
+      // Loop dinâmico baseado no número de cartas do jogo escolhido
       for (let i = 1; i <= CARDS_TARGET; i++) {
         if (!mountedRef.current) break;
         await new Promise(res => setTimeout(res, 600));
@@ -220,11 +225,12 @@ const Tarot: React.FC = () => {
         const userDob = user?.user_metadata?.birth_date || "";
         const cardIds = selectedCards.map(c => c.id);
 
+        // Aqui futuramente podemos passar o 'selectedSpreadId' para a IA saber qual jogo é
         const result = await getTarotReading(question, cardIds, userName, userDob);
         setReading(result);
 
         if (user) {
-          // Salvamos também qual foi o jogo (spreadId)
+          // Salva no histórico com o ID da tiragem correta
           await saveReading(user.id, 'tarot', { question, cardIds, spreadId: selectedSpreadId }, result);
         }
 
@@ -288,7 +294,7 @@ const Tarot: React.FC = () => {
         />
       )}
 
-      {/* PASSO 2: SELEÇÃO (COM LIMITE DINÂMICO) */}
+      {/* PASSO 2: SELEÇÃO (Com limite dinâmico) */}
       {step === 'selection' && (
         <SelectionStep 
           availableCards={availableCards}
@@ -299,11 +305,11 @@ const Tarot: React.FC = () => {
           onNext={handleGoToReveal}
           onBack={handleStepBack}
           isMobile={isMobile}
-          maxCards={CARDS_TARGET} // Passamos o limite correto
+          maxCards={CARDS_TARGET} // Passamos o limite correto aqui
         />
       )}
 
-      {/* PASSO 3: MESA / RESULTADO */}
+      {/* PASSO 3: MESA */}
       {(step === 'reveal' || step === 'result') && (
         <ReadingStep 
           question={question}
