@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowLeft } from 'lucide-react';
-import { CARD_BACK_URL, CARDS_TO_SELECT } from '../../constants';
+import { CARD_BACK_URL } from '../../constants'; // Removi CARDS_TO_SELECT daqui
 
 export interface CardData {
   id: number;
@@ -18,6 +18,7 @@ interface SelectionStepProps {
   onNext: () => void;
   onBack: () => void;
   isMobile: boolean;
+  maxCards: number; // <--- NOVA PROP IMPORTANTE
 }
 
 const SelectionStep: React.FC<SelectionStepProps> = ({
@@ -28,7 +29,8 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
   onCardSelect,
   onNext,
   onBack,
-  isMobile
+  isMobile,
+  maxCards // <--- Usado agora em vez da constante fixa
 }) => {
   
   const angleSpread = isMobile ? 100 : 130;
@@ -36,7 +38,6 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
   const hoverTranslateY = isMobile ? '-20px' : '-40px';
 
   // --- LÓGICA DE TOQUE (MOBILE) ---
-  // Unifiquei para funcionar tanto no toque inicial quanto no arrasto
   const handleTouch = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -48,7 +49,6 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
         setHoveredCardId(id);
       }
     } else {
-      // Se arrastar para fora das cartas (pro vazio), aí sim pode baixar
       setHoveredCardId(null);
     }
   };
@@ -57,7 +57,8 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
     <div className="flex flex-col items-center w-full relative justify-start pt-4 md:pt-8 min-h-[80vh]">
       
       <div className="text-center z-20 px-4 mb-6">
-        <h3 className="font-playfair text-3xl md:text-4xl text-white mb-1">Escolha 9 Cartas</h3>
+        {/* Título Dinâmico */}
+        <h3 className="font-playfair text-3xl md:text-4xl text-white mb-1">Escolha {maxCards} Cartas</h3>
         <p className="text-purple-200 text-lg font-light -mt-1">Siga sua intuição</p>
       </div>
 
@@ -66,10 +67,8 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
         <div 
           className="relative flex justify-center items-center" 
           style={{ height: isMobile ? "180px" : "260px", marginTop: "-20px" }}
-          onTouchStart={handleTouch} // Levanta ao tocar
-          onTouchMove={handleTouch}  // Acompanha o dedo
-          // REMOVIDO: onTouchEnd={() => setHoveredCardId(null)} 
-          // Agora a carta permanece levantada ao soltar o dedo!
+          onTouchStart={handleTouch} 
+          onTouchMove={handleTouch}
         >
           {availableCards.map((card, index) => {
             const total = availableCards.length;
@@ -121,15 +120,16 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
               </motion.div>
             ))}
             
-            {Array.from({ length: CARDS_TO_SELECT - selectedCards.length }).map((_, i) => (
+            {/* Gera slots vazios dinamicamente até chegar em maxCards */}
+            {Array.from({ length: maxCards - selectedCards.length }).map((_, i) => (
               <div key={i} className="w-10 h-16 md:w-14 md:h-24 rounded border border-dashed border-white/20 bg-white/5 flex-shrink-0" />
             ))}
           </div>
 
           <div className="flex justify-end items-center px-2">
             <div className="flex items-center gap-4">
-              <span className="text-gold font-playfair text-lg">{selectedCards.length} / {CARDS_TO_SELECT}</span>
-              {selectedCards.length === CARDS_TO_SELECT && (
+              <span className="text-gold font-playfair text-lg">{selectedCards.length} / {maxCards}</span>
+              {selectedCards.length === maxCards && (
                 <motion.button
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
