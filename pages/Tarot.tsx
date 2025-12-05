@@ -1,4 +1,3 @@
-// pages/Tarot.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
@@ -101,14 +100,14 @@ const Tarot: React.FC = () => {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Se cair aqui sem spread selecionado ou na etapa de escolha, manda escolher
-        if (!parsed.selectedSpreadId || parsed.step === 'spread_selection') {
+        // Se não tem spread selecionado, manda escolher
+        if (!parsed.selectedSpreadId) {
             navigate('/escolher');
         } else if (parsed.step) {
            setStep(parsed.step);
         }
       } else {
-        // Se não tem nada salvo, vai escolher
+        // Se não tem estado, manda escolher
         navigate('/escolher');
       }
     } catch (e) { 
@@ -141,7 +140,7 @@ const Tarot: React.FC = () => {
   // --- NAVEGAÇÃO AJUSTADA ---
   const handleStepBack = () => {
     if (step === 'question') {
-      // Voltar da pergunta -> Vai para ESCOLHA (Página nova)
+      // CORREÇÃO: Voltar da pergunta -> Vai para PÁGINA DE ESCOLHA
       navigate('/escolher');
     } else if (step === 'selection') {
       setQuestion(''); 
@@ -238,8 +237,6 @@ const Tarot: React.FC = () => {
       
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
       <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} onSelectPlan={() => setShowPlans(false)} />
-
-      {/* REMOVIDO: step === 'spread_selection' (Agora é uma página separada) */}
 
       {step === 'question' && (
         <QuestionStep 
