@@ -89,7 +89,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
             </div>
             <h3 className="text-2xl font-serif text-white mb-3">Baralho Cigano</h3>
             <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-              Tiragem de 9 cartas: Passado, Presente e Futuro. Receba orientação clara para o seu momento atual.
+              Escolha entre diversas tiragens (Amor, Ex, Mensal) para obter respostas específicas e profundas sobre seu momento atual.
             </p>
             <button 
               // CORREÇÃO AQUI: Mudado de '/tarot' para '/escolher'
