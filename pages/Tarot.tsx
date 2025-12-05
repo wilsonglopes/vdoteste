@@ -8,22 +8,18 @@ import { useTarotStore } from '../store/tarotStore';
 import { saveReading } from '../services/historyService';
 import { consumeCredit } from '../services/userService';
 
-// Componentes Modais
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// Componentes das Etapas
 import QuestionStep from '../components/tarot/QuestionStep';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
-import SpreadSelection from '../components/tarot/SpreadSelection';
 
-const LOCAL_KEY = 'vozes_tarot_state_v2'; // Mantenha v2 para limpar cache antigo
+const LOCAL_KEY = 'vozes_tarot_state_v2';
 
 const Tarot: React.FC = () => {
   const navigate = useNavigate();
 
-  // --- STORE GLOBAL ---
   const {
     step, setStep,
     selectedSpreadId,
@@ -32,15 +28,12 @@ const Tarot: React.FC = () => {
     revealedCount, setRevealedCount,
     reading, setReading,
     isLoadingAI, setLoadingAI,
-    resetTarot,
-    setSpread // Precisamos expor o setSpread se quisermos resetar específico
+    resetTarot
   } = useTarotStore();
 
-  // --- CÁLCULO DE CARTAS ---
   const currentSpread = SPREADS[selectedSpreadId as keyof typeof SPREADS] || SPREADS['mesa_real'];
   const CARDS_TARGET = currentSpread.cardsCount;
 
-  // --- ESTADOS LOCAIS ---
   const [deck, setDeck] = useState<CardData[]>([]);
   const [availableCards, setAvailableCards] = useState<CardData[]>([]);
   const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
@@ -54,10 +47,11 @@ const Tarot: React.FC = () => {
   const abortRevealRef = useRef({ aborted: false });
   const mountedRef = useRef(true);
 
-  // --- 1. INICIALIZAÇÃO E SETUP ---
-
   const handleNewReading = () => {
-    // Reseta tudo para o estado inicial LIMPO
+    abortRevealRef.current.aborted = true;
+    if (typeof resetTarot === 'function') resetTarot();
+    abortRevealRef.current.aborted = false;
+    
     setHoveredCardId(null);
     setQuestion(''); 
     setSelectedCards([]); 
@@ -65,9 +59,6 @@ const Tarot: React.FC = () => {
     setRevealedLocal(0);
     setReading(null);
     setLoadingAI(false);
-    
-    // IMPORTANTE: Volta para a seleção de jogo
-    setStep('spread_selection');
     
     initializeDeck();
     try { localStorage.removeItem(LOCAL_KEY); } catch (e) {}
@@ -106,24 +97,22 @@ const Tarot: React.FC = () => {
     initializeDeck();
     mountedRef.current = true;
 
-    // LÓGICA DE RECUPERAÇÃO CORRIGIDA
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Se o usuário estava no meio de algo, restaura.
-        if (parsed.step && parsed.step !== 'spread_selection') {
+        // Se cair aqui sem spread selecionado ou na etapa de escolha, manda escolher
+        if (!parsed.selectedSpreadId || parsed.step === 'spread_selection') {
+            navigate('/escolher');
+        } else if (parsed.step) {
            setStep(parsed.step);
-        } else {
-           // Se estava no início ou vazio, força a escolha
-           setStep('spread_selection');
         }
       } else {
-        // Novo acesso: força escolha
-        setStep('spread_selection');
+        // Se não tem nada salvo, vai escolher
+        navigate('/escolher');
       }
     } catch (e) { 
-      setStep('spread_selection');
+      navigate('/escolher');
     }
 
     return () => { 
@@ -149,29 +138,21 @@ const Tarot: React.FC = () => {
   }, [revealedCount]);
 
 
-  // --- 2. NAVEGAÇÃO (BOTÃO VOLTAR) ---
-
+  // --- NAVEGAÇÃO AJUSTADA ---
   const handleStepBack = () => {
     if (step === 'question') {
-      // ESTAVA NA PERGUNTA -> QUER TROCAR O JOGO
-      setQuestion(''); 
-      setStep('spread_selection'); // Volta para os cards de escolha
+      // Voltar da pergunta -> Vai para ESCOLHA (Página nova)
+      navigate('/escolher');
     } else if (step === 'selection') {
-      // ESTAVA ESCOLHENDO CARTAS -> QUER MUDAR A PERGUNTA
       setQuestion(''); 
       setSelectedCards([]); 
-      initializeDeck();
       setStep('question');
     } else if (step === 'reveal' || step === 'result') {
-      // ESTAVA NO RESULTADO -> QUER REESCOLHER AS CARTAS (MESMO JOGO)
       setSelectedCards([]); 
       setRevealedLocal(0);
       setRevealedCount(0);
       initializeDeck(); 
       setStep('selection');
-    } else if (step === 'spread_selection') {
-      // ESTAVA NA ESCOLHA -> VAI EMBORA
-      navigate('/');
     }
   };
 
@@ -187,7 +168,6 @@ const Tarot: React.FC = () => {
     setStep('reveal');
   };
 
-  // --- 3. LÓGICA DE REVELAÇÃO ---
   const revealingRef = useRef(false);
 
   const startReveal = async () => {
@@ -236,7 +216,7 @@ const Tarot: React.FC = () => {
         }
 
       } catch (err) {
-        console.error('[tarot] ai call failed', err);
+        console.error(err);
         setReading({
           intro: "Houve uma interferência espiritual na conexão.",
           timeline: { past: "", present: "", future: "" },
@@ -252,44 +232,21 @@ const Tarot: React.FC = () => {
     }
   };
 
-  // --- 4. RENDERIZAÇÃO ---
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4 min-h-screen flex flex-col items-center relative w-full overflow-x-hidden scrollbar-hide">
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-      `}</style>
+    <div className="max-w-4xl mx-auto py-6 px-4 w-full flex flex-col items-center relative overflow-x-hidden scrollbar-hide">
+      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
       
-      <AuthModal 
-        isOpen={showAuth} 
-        onClose={() => setShowAuth(false)} 
-        onSuccess={() => setShowAuth(false)} 
-      />
-      
-      <PlansModal 
-        isOpen={showPlans} 
-        onClose={() => setShowPlans(false)}
-        onSelectPlan={(planId) => {
-          alert(`Plano ${planId} selecionado (Pagamento em breve).`);
-          setShowPlans(false);
-        }}
-      />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
+      <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} onSelectPlan={() => setShowPlans(false)} />
 
-      {step === 'spread_selection' && (
-        <SpreadSelection />
-      )}
+      {/* REMOVIDO: step === 'spread_selection' (Agora é uma página separada) */}
 
       {step === 'question' && (
         <QuestionStep 
           question={question}
           setQuestion={setQuestion}
           onNext={() => setStep('selection')}
-          onBack={handleStepBack} // Passa a função corrigida
+          onBack={handleStepBack}
         />
       )}
 
@@ -317,11 +274,10 @@ const Tarot: React.FC = () => {
           user={user}
           onReveal={startReveal}
           onBack={handleStepBack}
-          onGoHome={() => { handleNewReading(); navigate('/'); }} // Agora reseta tudo
+          onGoHome={() => { handleNewReading(); navigate('/'); }}
           onNewReading={handleNewReading}
         />
       )}
-
     </div>
   );
 };
