@@ -1,151 +1,115 @@
 import React, { useEffect, useState } from 'react';
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, ShoppingCart, ShieldCheck } from 'lucide-react';
+import { Payment } from '@mercadopago/sdk-react';
+import { initMercadoPago } from '@mercadopago/sdk-react';
+import { X, Loader2 } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   preferenceId: string | null;
-  amount: number | null; // OBRIGATÓRIO para o Brick funcionar
-  planTitle?: string;
-  planPrice?: string;
+  amount: number | null;
+  planTitle: string;
+  planPrice: string;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ 
   isOpen, 
   onClose, 
   preferenceId, 
-  amount,
-  planTitle = "Créditos",
-  planPrice = "R$ 0,00"
+  amount, 
+  planTitle, 
+  planPrice 
 }) => {
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
+  // Estado para garantir que temos o e-mail antes de desenhar o componente
+  const [isReady, setIsReady] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('cliente@vozesdooraculo.com');
 
   useEffect(() => {
-    try {
-      // Inicializa o Mercado Pago com sua Chave Pública
-      initMercadoPago('APP_USR-7c3fa8cf-7680-42a9-bcd7-388e72fbcfe6', {
-        locale: 'pt-BR'
-      });
-    } catch (err) {
-      console.error("Erro init MP:", err);
-    }
-  }, []);
+    // 1. INICIALIZAÇÃO CRÍTICA COM CHAVE PÚBLICA NOVA
+    initMercadoPago('APP_USR-b1f663d0-5d18-4458-b345-e7889fcdaaa7', {
+      locale: 'pt-BR'
+    });
 
-  // Se não tiver os dados essenciais, não renderiza nada
-  if (!isOpen || !preferenceId || !amount) return null;
-
-  const customization = {
-    paymentMethods: {
-      ticket: "all",
-      bankTransfer: "all", // Pix
-      creditCard: "all",
-      debitCard: "all",
-      mercadoPago: "all",
-    },
-    visual: {
-      style: {
-        theme: 'dark', // Tema escuro para combinar com o site
-      },
-      hidePaymentButton: false
+    // 2. Busca o email e libera a renderização
+    if (isOpen) {
+      setIsReady(false);
+      const prepare = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email) setUserEmail(user.email);
+        } finally {
+          // Pequeno delay para garantir que o initMercadoPago rodou
+          setTimeout(() => setIsReady(true), 500);
+        }
+      };
+      prepare();
     }
-  };
+  }, [isOpen]);
+
+  if (!isOpen || !preferenceId) return null;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-        {/* Fundo Escuro */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/90 backdrop-blur-sm"
-        />
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg bg-[#18181b] rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+        
+        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#27272a]">
+          <div>
+            <h3 className="text-lg font-bold text-white">Finalizar Pagamento</h3>
+            <p className="text-sm text-gray-400">{planTitle} • {planPrice}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <X size={24} />
+          </button>
+        </div>
 
-        {/* Janela do Pagamento */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-lg bg-[#1a1b26] rounded-2xl shadow-2xl overflow-hidden border border-purple-500/30 flex flex-col max-h-[90vh]"
-        >
-          {/* Cabeçalho */}
-          <div className="flex flex-col p-6 border-b border-white/10 bg-[#16161e] shrink-0 relative">
-            <button 
-              onClick={onClose} 
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="flex items-start gap-4 pr-8">
-              <div className="bg-purple-600/20 p-3 rounded-xl">
-                <ShoppingCart className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-serif text-xl mb-1">Finalizar Pagamento</h3>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-300">{planTitle}</span>
-                  <span className="text-slate-600">•</span>
-                  <span className="text-gold font-bold">{planPrice}</span>
-                </div>
-              </div>
+        <div className="p-4 max-h-[80vh] overflow-y-auto min-h-[300px] flex flex-col justify-center">
+          
+          {!isReady ? (
+            <div className="flex flex-col items-center justify-center space-y-4 text-purple-400">
+              <Loader2 className="w-10 h-10 animate-spin" />
+              <p className="text-sm">Carregando ambiente seguro...</p>
             </div>
-          </div>
-
-          {/* Área do Brick */}
-          <div className="p-4 overflow-y-auto custom-scrollbar bg-[#1a1b26] flex-1 relative min-h-[300px]">
-             
-             {/* Loading State */}
-             {!ready && !error && (
-               <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-0 bg-[#1a1b26]">
-                 <Loader2 className="w-8 h-8 animate-spin mb-3 text-purple-500" />
-                 <p className="text-sm">Carregando ambiente seguro...</p>
-               </div>
-             )}
-
-             {/* Mensagem de Erro */}
-             {error && (
-               <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 z-10 bg-[#1a1b26] p-6 text-center">
-                 <p className="mb-4">{error}</p>
-                 <button onClick={onClose} className="text-sm underline text-slate-500">Fechar</button>
-               </div>
-             )}
-
-             {/* Componente Oficial */}
-             <div className={ready ? "opacity-100" : "opacity-0"}>
-               <Payment
-                 initialization={{ 
-                    preferenceId: preferenceId,
-                    amount: amount // <--- AQUI ESTÁ A CORREÇÃO CRUCIAL
-                 }}
-                 customization={customization}
-                 onReady={() => setReady(true)}
-                 onError={(err) => {
-                   console.error('Erro no Brick:', err);
-                   setError("Não foi possível carregar o pagamento. Se você usa bloqueador de anúncios, tente desativá-lo.");
-                   setReady(true);
-                 }}
-                 onSubmit={async (param) => {
-                   console.log('Pagamento processado', param);
-                   // O próprio Brick pode redirecionar ou você pode fechar o modal aqui
-                 }}
-               />
-             </div>
-             
-             {ready && !error && (
-               <div className="mt-6 text-center flex items-center justify-center gap-2 text-[10px] text-slate-500">
-                 <ShieldCheck size={12} />
-                 <span>Ambiente criptografado pelo Mercado Pago</span>
-               </div>
-             )}
-          </div>
-        </motion.div>
+          ) : (
+            <Payment
+              initialization={{
+                amount: amount || 0,
+                preferenceId: preferenceId,
+                // O E-MAIL AQUI É OBRIGATÓRIO PARA O PIX NÃO PEDIR NA TELA
+                payer: {
+                  email: userEmail, 
+                },
+              }}
+              customization={{
+                paymentMethods: {
+                  ticket: "all",
+                  bankTransfer: "all",
+                  creditCard: "all",
+                  debitCard: "all",
+                  mercadoPago: "all",
+                },
+                visual: {
+                  style: {
+                    theme: 'dark', // Isso deixa o modal bonito (escuro)
+                  },
+                  hidePaymentButton: false, 
+                },
+              }}
+              onSubmit={async ({ formData }) => {
+                console.log("Pagamento enviado", formData);
+              }}
+              onReady={() => console.log("Brick Carregado")}
+              onError={(error) => console.error("Erro no Brick:", error)}
+            />
+          )}
+        </div>
+        
+        <div className="p-3 text-center text-[10px] text-gray-500 border-t border-white/5 bg-[#18181b]">
+          Ambiente Seguro Mercado Pago
+        </div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };
 
