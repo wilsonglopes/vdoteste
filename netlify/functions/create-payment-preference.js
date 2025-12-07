@@ -1,7 +1,7 @@
 const mercadopago = require('mercadopago');
 
 exports.handler = async function(event, context) {
-  // SUA CHAVE DE ACESSO NOVA (Backend)
+  // SUA CHAVE DE PRODUÇÃO NOVA
   mercadopago.configure({
     access_token: 'APP_USR-8229943388926691-090217-058ca460e5c70723e771ba6c5c7e0509-241067158'
   });
@@ -30,13 +30,13 @@ exports.handler = async function(event, context) {
           category_id: 'virtual_goods'
         }
       ],
-      // Envia o e-mail para o MP saber quem é
+      // OBRIGATÓRIO: Enviar o e-mail para o Pix não pedir na tela
       payer: {
-        email: email || 'cliente@vozesdooraculo.com' 
+        email: email || 'cliente@vozesdooraculo.com'
       },
-      // FUNDAMENTAL PARA NÃO DAR ERRO NO BRICK:
+      // OBRIGATÓRIO: Avisar que não tem frete para não dar erro de endereço
       shipments: {
-        mode: 'not_specified', 
+        mode: 'not_specified'
       },
       binary_mode: true,
       external_reference: userId,
@@ -46,7 +46,6 @@ exports.handler = async function(event, context) {
         excluded_payment_methods: [],
         installments: 12
       },
-      // Nota: No modo Brick, o back_urls é menos usado, mas mantemos por segurança
       back_urls: {
         success: `${SITE_URL}/#/dashboard`,
         failure: `${SITE_URL}/#/dashboard`,
