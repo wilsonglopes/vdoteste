@@ -35,7 +35,6 @@ async function callOracleBackend(prompt: string): Promise<string> {
   return data.result;
 }
 
-// --- TAROT COM LEITURA DE COMBINAÇÕES ---
 export const getTarotReading = async (
   question: string,
   cardIds: number[],
@@ -46,45 +45,33 @@ export const getTarotReading = async (
   const userAge = calculateAge(userBirthDate);
   const cardNamesList = cardIds.map((id) => {
     const name = CARD_NAMES[id as keyof typeof CARD_NAMES] || `Carta ${id}`;
-    return `Posição ${id}: ${name}`;
+    return `Carta ${id}: ${name}`;
   }).join("\n");
 
   const promptText = `
-    Atue como a Cigana Esmeralda, uma oráculo sábia, mística e acolhedora.
-    
-    DADOS DO CONSULENTE:
-    - Nome: ${userName} (${userAge} anos).
-    - Pergunta/Tema: "${question}"
-    
-    TIRAGEM (Mesa Real Simplificada - Passado, Presente, Futuro):
+    Atue como a Cigana Esmeralda.
+    Consulente: ${userName} (${userAge} anos).
+    Pergunta: "${question}"
+    Cartas:
     ${cardNamesList}
     
-    INSTRUÇÕES DE LEITURA:
-    1. Não leia as cartas isoladamente. Analise a *combinação* entre elas (ex: uma carta negativa perto de uma positiva suaviza o efeito).
-    2. Seja específica em relação à pergunta do usuário. Evite respostas vagas.
-    3. Use uma linguagem envolvente, mística, mas clara.
+    Analise Passado, Presente e Futuro.
     
-    IMPORTANTE: Responda APENAS o JSON abaixo, sem explicações extras:
+    IMPORTANTE: Responda APENAS o JSON abaixo, sem explicações extras antes ou depois:
     {
-      "intro": "Uma saudação mística personalizada citando o nome do consulente e sentindo a energia da pergunta.",
-      "timeline": { 
-        "past": "Análise das 3 primeiras cartas (raízes da situação).", 
-        "present": "Análise das 3 cartas do meio (momento atual e desafios).", 
-        "future": "Análise das 3 últimas cartas (tendência e desfecho provável)." 
-      },
-      "individual_cards": [
-        { "position": "1", "card_name": "Nome da Carta", "interpretation": "Palavra-chave ou frase curta sobre esta carta neste contexto específico." }
-        // ... repetir para todas as cartas
-      ],
-      "summary": "Um resumo direto respondendo à pergunta: Sim, Não ou Talvez, e o porquê.",
-      "advice": "Um conselho final espiritual e prático ou um mantra."
+      "intro": "texto",
+      "timeline": { "past": "texto", "present": "texto", "future": "texto" },
+      "individual_cards": [{ "position": "texto", "card_name": "texto", "interpretation": "texto" }],
+      "summary": "texto",
+      "advice": "texto"
     }
   `;
 
   try {
     const rawResult = await callOracleBackend(promptText);
     
-    // Limpeza de segurança para extrair apenas o JSON
+    // --- LIMPEZA DE SEGURANÇA (Para o gemini-pro) ---
+    // Encontra onde começa o '{' e onde termina o '}'
     const jsonStartIndex = rawResult.indexOf('{');
     const jsonEndIndex = rawResult.lastIndexOf('}');
     
@@ -98,55 +85,18 @@ export const getTarotReading = async (
   } catch (error: any) {
     console.error("Erro Tarot:", error);
     return {
-      intro: "As cartas estão nubladas neste momento...",
+      intro: "As cartas estão se revelando...",
       timeline: { past: "...", present: "...", future: "..." },
-      individual_cards: [],
-      summary: "Houve uma interferência na conexão espiritual. Por favor, tente novamente.",
-      advice: "Respire fundo e refaça a pergunta."
+      summary: "Houve uma pequena falha na conexão. Tente novamente.",
+      advice: "Respire fundo e clique novamente."
     };
   }
 };
 
-// --- SONHOS COM PSICOLOGIA E SIMBOLISMO ---
 export const interpretDream = async (dreamText: string): Promise<string> => {
   try {
-    const prompt = `
-      Atue como um Guardião dos Sonhos, especialista em simbologia mística e arquétipos de Jung.
-      
-      SONHO DO USUÁRIO: "${dreamText}"
-      
-      TAREFA:
-      Faça uma interpretação profunda. Não apenas diga o que significa, mas conecte com o momento de vida.
-      
-      ESTRUTURA DA RESPOSTA (Use formatação Markdown):
-      1. **Visão Geral:** O sentimento principal do sonho.
-      2. **Símbolos Chave:** Destaque 2 ou 3 elementos (ex: **Água**, **Voar**) e seus significados ocultos.
-      3. **Mensagem do Inconsciente:** O que a alma da pessoa está tentando dizer.
-      4. **Conselho:** Uma ação prática ou reflexão.
-    `;
-    return await callOracleBackend(prompt);
+    return await callOracleBackend(`Interprete este sonho: "${dreamText}"`);
   } catch (error: any) {
-    return "O mundo dos sonhos está nebuloso agora. Tente enviar novamente.";
-  }
-};
-
-// --- CARTA DO DIA (ENERGIA RÁPIDA) ---
-export const getDailyCardReading = async (cardId: number, userName: string): Promise<string> => {
-  const cardName = CARD_NAMES[cardId as keyof typeof CARD_NAMES] || `Carta ${cardId}`;
-  
-  const prompt = `
-    Você é um oráculo amigo e sábio.
-    A usuária ${userName} tirou a carta "${cardName}" para reger o dia de hoje.
-    
-    Forneça um conselho "Biscoito da Sorte Místico":
-    - Curto, direto e inspirador.
-    - Fale sobre a energia do dia (alerta ou bênção).
-    - Máximo 3 frases.
-  `;
-
-  try {
-    return await callOracleBackend(prompt);
-  } catch (error) {
-    return "As energias estão se alinhando. Confie na sua intuição hoje.";
+    return "Erro ao interpretar sonho. Tente novamente.";
   }
 };
