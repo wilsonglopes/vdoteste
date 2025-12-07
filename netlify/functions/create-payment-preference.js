@@ -1,9 +1,9 @@
 const mercadopago = require('mercadopago');
 
 exports.handler = async function(event, context) {
-  // 1. Configuração CORRETA para versão 1.x
+  // Configuração com o ACCESS TOKEN NOVO (Final 7158)
   mercadopago.configure({
-    access_token: process.env.MP_ACCESS_TOKEN
+    access_token: 'APP_USR-8229943388926691-090217-058ca460e5c70723e771ba6c5c7e0509-241067158'
   });
 
   const headers = {
@@ -17,10 +17,10 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const { title, price, quantity, userId } = JSON.parse(event.body);
+    const { title, price, quantity, userId, email } = JSON.parse(event.body);
     const SITE_URL = process.env.URL || 'https://vozesdooraculo.netlify.app';
 
-    // 2. Criação da preferência
+    // Criação da preferência SIMPLIFICADA (Estilo 26/11)
     const preference = {
       items: [
         {
@@ -30,6 +30,10 @@ exports.handler = async function(event, context) {
           currency_id: 'BRL'
         }
       ],
+      // O e-mail é crucial para o Pix não pedir na tela
+      payer: {
+        email: email || 'cliente@vozesdooraculo.com' 
+      },
       external_reference: userId,
       notification_url: `${SITE_URL}/.netlify/functions/mp-webhook`,
       payment_methods: {
@@ -43,11 +47,10 @@ exports.handler = async function(event, context) {
         pending: `${SITE_URL}/#/dashboard`
       },
       auto_return: "approved",
+      // Removemos binary_mode e shipments para testar o padrão antigo
     };
 
     const response = await mercadopago.preferences.create(preference);
-    
-    console.log("Preferência criada:", response.body.id);
     
     return {
       statusCode: 200,
