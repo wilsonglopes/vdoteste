@@ -14,42 +14,27 @@ interface PaymentModalProps {
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  preferenceId, 
-  amount, 
-  planTitle, 
-  planPrice 
+  isOpen, onClose, preferenceId, amount, planTitle, planPrice 
 }) => {
   
-  // Estado para garantir que temos o e-mail ANTES de mostrar o Brick
   const [isReady, setIsReady] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('cliente@vozesdooraculo.com');
 
   useEffect(() => {
-    // 1. Inicializa com sua chave nova
+    // Inicializa com a Public Key NOVA
     initMercadoPago('APP_USR-b1f663d0-5d18-4458-b345-e7889fcdaaa7', {
       locale: 'pt-BR'
     });
 
-    // 2. Busca o usuário e só libera o componente depois
-    const prepare = async () => {
-      if (isOpen) {
-        setIsReady(false); // Trava a tela
+    if (isOpen) {
+      setIsReady(false);
+      const prepare = async () => {
         const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user && user.email) {
-          console.log("Email encontrado:", user.email);
-          setUserEmail(user.email);
-          setIsReady(true); // Libera o componente
-        } else {
-          // Fallback se não achar o e-mail (evita tela branca)
-          setUserEmail('cliente@vozesdooraculo.com');
-          setIsReady(true);
-        }
-      }
-    };
-    prepare();
+        if (user?.email) setUserEmail(user.email);
+        setTimeout(() => setIsReady(true), 500); // Aguarda meio segundo para garantir
+      };
+      prepare();
+    }
   }, [isOpen]);
 
   if (!isOpen || !preferenceId) return null;
@@ -69,21 +54,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         <div className="p-4 max-h-[80vh] overflow-y-auto min-h-[300px] flex flex-col justify-center">
-          
           {!isReady ? (
             <div className="flex flex-col items-center justify-center space-y-4 text-purple-400">
               <Loader2 className="w-10 h-10 animate-spin" />
-              <p className="text-sm">Preparando ambiente seguro...</p>
+              <p className="text-sm">Carregando ambiente seguro...</p>
             </div>
           ) : (
             <Payment
               initialization={{
                 amount: amount || 0,
                 preferenceId: preferenceId,
-                // AQUI ESTÁ O SEGREDO: O e-mail já está preenchido
-                payer: {
-                  email: userEmail, 
-                },
+                payer: { email: userEmail }, // Segredo para o Pix direto
               }}
               customization={{
                 paymentMethods: {
@@ -94,23 +75,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   mercadoPago: "all",
                 },
                 visual: {
-                  style: {
-                    theme: 'dark',
-                  },
+                  style: { theme: 'dark' },
                   hidePaymentButton: false, 
                 },
               }}
-              onSubmit={async ({ formData }) => {
-                console.log("Pagamento enviado", formData);
-              }}
-              onReady={() => console.log("Brick Carregado")}
-              onError={(error) => console.error("Erro no Brick:", error)}
+              onSubmit={async ({ formData }) => console.log("Pagamento enviado", formData)}
             />
           )}
-        </div>
-        
-        <div className="p-3 text-center text-[10px] text-gray-500 border-t border-white/5 bg-[#18181b]">
-          Ambiente Seguro Mercado Pago
         </div>
       </div>
     </div>
