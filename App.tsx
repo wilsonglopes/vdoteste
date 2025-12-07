@@ -1,9 +1,11 @@
+// App.tsx
 import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tarot from './pages/Tarot';
 import Dreams from './pages/Dreams';
+import Dashboard from './pages/Dashboard'; // <--- Importação Nova
 import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
@@ -33,7 +35,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Protected Route Wrapper
+  // Wrapper para rotas que EXIGEM login (como o Dashboard)
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!session) {
       return <Navigate to="/" replace />;
@@ -46,19 +48,17 @@ const App: React.FC = () => {
       <Layout user={session?.user}>
         <Routes>
           <Route path="/" element={<Home user={session?.user} />} />
+          
+          {/* Rotas Abertas (A proteção agora é interna, no botão Revelar) */}
+          <Route path="/tarot" element={<Tarot />} />
+          <Route path="/dreams" element={<Dreams />} />
+
+          {/* Rota Protegida (Só entra logado) */}
           <Route 
-            path="/tarot" 
+            path="/dashboard" 
             element={
               <ProtectedRoute>
-                <Tarot />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/dreams" 
-            element={
-              <ProtectedRoute>
-                <Dreams />
+                <Dashboard />
               </ProtectedRoute>
             } 
           />

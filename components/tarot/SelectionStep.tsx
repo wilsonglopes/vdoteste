@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowLeft } from 'lucide-react';
-import { CARD_BACK_URL } from '../../constants'; // Removi CARDS_TO_SELECT daqui
+import { CARD_BACK_URL, CARDS_TO_SELECT } from '../../constants';
 
 export interface CardData {
   id: number;
@@ -18,7 +18,6 @@ interface SelectionStepProps {
   onNext: () => void;
   onBack: () => void;
   isMobile: boolean;
-  maxCards: number; // <--- NOVA PROP IMPORTANTE
 }
 
 const SelectionStep: React.FC<SelectionStepProps> = ({
@@ -29,47 +28,25 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
   onCardSelect,
   onNext,
   onBack,
-  isMobile,
-  maxCards // <--- Usado agora em vez da constante fixa
+  isMobile
 }) => {
   
   const angleSpread = isMobile ? 100 : 130;
   const transformOriginY = isMobile ? '180%' : '200%';
   const hoverTranslateY = isMobile ? '-20px' : '-40px';
 
-  // --- LÓGICA DE TOQUE (MOBILE) ---
-  const handleTouch = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    const cardElement = element?.closest('[data-card-id]');
-
-    if (cardElement) {
-      const id = Number(cardElement.getAttribute('data-card-id'));
-      if (id !== hoveredCardId) {
-        setHoveredCardId(id);
-      }
-    } else {
-      setHoveredCardId(null);
-    }
-  };
-
   return (
     <div className="flex flex-col items-center w-full relative justify-start pt-4 md:pt-8 min-h-[80vh]">
       
       <div className="text-center z-20 px-4 mb-6">
-        {/* Título Dinâmico */}
-        <h3 className="font-playfair text-3xl md:text-4xl text-white mb-1">Escolha {maxCards} Cartas</h3>
+        <h3 className="font-playfair text-3xl md:text-4xl text-white mb-1">Escolha 9 Cartas</h3>
         <p className="text-purple-200 text-lg font-light -mt-1">Siga sua intuição</p>
       </div>
 
-      {/* LEQUE DE CARTAS */}
+      {/* LEQUE DE CARTAS - AJUSTE MOBILE AQUI */}
+      {/* mb-12 (48px) no mobile | md:mb-32 (128px) no desktop */}
       <div className="relative w-full flex justify-center items-start mb-12 md:mb-32">
-        <div 
-          className="relative flex justify-center items-center" 
-          style={{ height: isMobile ? "180px" : "260px", marginTop: "-20px" }}
-          onTouchStart={handleTouch} 
-          onTouchMove={handleTouch}
-        >
+        <div className="relative flex justify-center items-center" style={{ height: isMobile ? "180px" : "260px", marginTop: "-20px" }}>
           {availableCards.map((card, index) => {
             const total = availableCards.length;
             const angle = total > 1 ? (index / (total - 1) - 0.5) * angleSpread : 0;
@@ -79,7 +56,6 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
             return (
               <div
                 key={card.id}
-                data-card-id={card.id} 
                 onClick={() => onCardSelect(card)}
                 onMouseEnter={() => setHoveredCardId(card.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
@@ -95,7 +71,7 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
                 <img 
                   src={CARD_BACK_URL} 
                   alt="Verso" 
-                  className={`w-full h-full rounded-xl shadow-2xl border-2 transition-colors pointer-events-none ${isHovered ? 'border-gold shadow-gold/50' : 'border-white/20 border-opacity-50'}`} 
+                  className={`w-full h-full rounded-xl shadow-2xl border-2 transition-colors ${isHovered ? 'border-gold shadow-gold/50' : 'border-white/20 border-opacity-50'}`} 
                 />
               </div>
             );
@@ -120,16 +96,15 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
               </motion.div>
             ))}
             
-            {/* Gera slots vazios dinamicamente até chegar em maxCards */}
-            {Array.from({ length: maxCards - selectedCards.length }).map((_, i) => (
+            {Array.from({ length: CARDS_TO_SELECT - selectedCards.length }).map((_, i) => (
               <div key={i} className="w-10 h-16 md:w-14 md:h-24 rounded border border-dashed border-white/20 bg-white/5 flex-shrink-0" />
             ))}
           </div>
 
           <div className="flex justify-end items-center px-2">
             <div className="flex items-center gap-4">
-              <span className="text-gold font-playfair text-lg">{selectedCards.length} / {maxCards}</span>
-              {selectedCards.length === maxCards && (
+              <span className="text-gold font-playfair text-lg">{selectedCards.length} / {CARDS_TO_SELECT}</span>
+              {selectedCards.length === CARDS_TO_SELECT && (
                 <motion.button
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}

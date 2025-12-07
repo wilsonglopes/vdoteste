@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
-import { Moon, Star } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Assuming HashRouter usage in App
+import { Moon, Star, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 
 interface LayoutProps {
@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
       {/* Mystical Background */}
       <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-black"></div>
       
-      {/* Stars Overlay (Static CSS simulation) */}
+      {/* Stars Overlay */}
       <div className="fixed inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
 
       {/* Ambient Glow */}
@@ -33,7 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
             <Star className="w-3 h-3 text-yellow-100 absolute -top-1 -right-1 animate-pulse-slow" />
           </div>
           <div>
-            <h1 className="font-serif text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-purple-200">
+            <h1 className="font-serif text-lg md:text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-purple-200">
               Vozes do Oráculo
             </h1>
           </div>
@@ -41,23 +41,33 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
 
         <div className="flex items-center gap-4">
           {user && (
-            <button 
-              onClick={handleLogout}
-              className="text-xs tracking-widest uppercase text-slate-400 hover:text-white transition-colors border border-transparent hover:border-white/10 px-3 py-1 rounded-full"
-            >
-              Sair
-            </button>
+            <>
+              <Link 
+                to="/dashboard" 
+                className="flex items-center gap-2 text-xs tracking-widest uppercase text-purple-300 hover:text-white transition-colors border border-purple-500/30 hover:border-purple-400/50 bg-purple-500/10 hover:bg-purple-500/20 px-4 py-1.5 rounded-full"
+              >
+                <User size={14} />
+                <span className="hidden md:inline">Meu Grimório</span>
+              </Link>
+
+              <button 
+                onClick={handleLogout}
+                className="text-xs tracking-widest uppercase text-slate-400 hover:text-white transition-colors border border-transparent hover:border-white/10 px-3 py-1 rounded-full"
+              >
+                Sair
+              </button>
+            </>
           )}
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center w-full max-w-5xl mx-auto p-6">
+      {/* Main Content - ALTERADO AQUI: pt-0 remove o espaço do topo */}
+      <main className="relative z-10 flex flex-col items-center w-full max-w-5xl mx-auto px-4 pb-6 pt-0">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full text-center py-6 text-slate-600 text-xs">
+      <footer className="relative z-10 w-full text-center py-6 text-slate-600 text-xs mb-4">
         <p>© {new Date().getFullYear()} Vozes do Oráculo. Conexão estabelecida.</p>
       </footer>
     </div>
