@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Sparkles, Star, Zap, Gem, Loader2 } from 'lucide-react';
+import { X, Check, Star, Zap, Gem, Loader2 } from 'lucide-react';
 import { supabase } from '../services/supabase';
-import PaymentModal from './PaymentModal';
+import PaymentModal from './PaymentModal'; // Voltamos a importar o Modal
 
 interface PlansModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ interface PlansModalProps {
 const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState<string | null>(null);
   
-  // Estados para o Checkout Transparente
+  // Estados para controlar o Modal de Pagamento
   const [paymentPreferenceId, setPaymentPreferenceId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
   const [selectedPlanTitle, setSelectedPlanTitle] = useState<string>("");
@@ -28,28 +28,29 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
       
       if (!user) {
         alert("Faça login para continuar.");
+        setLoading(null);
         return;
       }
 
-      // Chama o backend para criar a preferência
       const response = await fetch('/.netlify/functions/create-payment-preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: `Pacote ${plan.title}`, // Nome do produto no extrato
+          title: `Pacote ${plan.title}`,
           price: plan.rawPrice,
           quantity: 1,
-          userId: user.id 
+          userId: user.id,
+          email: user.email 
         })
       });
 
       const data = await response.json();
       
       if (data.preferenceId) {
-        // Sucesso! Abre o modal interno com os dados
+        // Sucesso: Abre o Modal Interno (Bonito)
         setSelectedPlanTitle(plan.title);
         setSelectedPlanPrice(plan.price);
-        setPaymentAmount(plan.rawPrice); // <--- Salva o valor numérico
+        setPaymentAmount(plan.rawPrice);
         setPaymentPreferenceId(data.preferenceId);
       } else {
         alert('Erro ao iniciar pagamento. Tente novamente.');
@@ -69,7 +70,7 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
       price: 'R$ 19,90',
       rawPrice: 19.90,
       credits: 3,
-      features: ['3 Consultas completas', 'Tarot ou Sonhos', 'Histórico salvo', 'Sem validade'],
+      features: ['3 Consultas (R$ 6,63 cada)', 'Baralho Cigano ou Sonhos', 'Histórico salvo', 'Sem validade'],
       icon: <Star className="w-6 h-6 text-blue-400" />,
       color: 'from-blue-900 to-slate-900',
       border: 'border-blue-500/30',
@@ -81,7 +82,7 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
       price: 'R$ 39,90',
       rawPrice: 39.90,
       credits: 7,
-      features: ['7 Consultas (R$ 5,70 cada)', 'Economize 15%', 'Acesso imediato', 'Suporte prioritário'],
+      features: ['7 Consultas (R$ 5,70 cada)', 'Economize 15%', 'Histórico salvo', 'Sem validade'],
       icon: <Zap className="w-6 h-6 text-gold" />,
       color: 'from-purple-900 to-slate-900',
       border: 'border-gold/50',
@@ -94,7 +95,7 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
       price: 'R$ 69,90',
       rawPrice: 69.90,
       credits: 15,
-      features: ['15 Consultas (Melhor Valor)', 'Apenas R$ 4,66 por leitura', 'Economia de 30%', 'Ideal para uso frequente'],
+      features: ['15 Consultas (R$ 4,66 cada)', 'Melhor oferta', 'Economia de 30%', 'Ideal para uso frequente'],
       icon: <Gem className="w-6 h-6 text-pink-400" />,
       color: 'from-pink-900 to-slate-900',
       border: 'border-pink-500/30',
@@ -104,18 +105,17 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Modal de Pagamento (Sobreposto) */}
+      {/* MODAL DE PAGAMENTO (O componente escuro) */}
       <PaymentModal 
         isOpen={!!paymentPreferenceId} 
         onClose={() => setPaymentPreferenceId(null)}
         preferenceId={paymentPreferenceId}
-        amount={paymentAmount} // Passando o valor corrigido
+        amount={paymentAmount}
         planTitle={selectedPlanTitle}
         planPrice={selectedPlanPrice}
       />
 
       <AnimatePresence>
-        {/* Só mostra os planos se não estiver pagando */}
         {!paymentPreferenceId && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <motion.div
@@ -150,12 +150,12 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
                       className={`relative flex flex-col p-6 rounded-2xl border ${plan.border} bg-gradient-to-b ${plan.color} hover:scale-[1.02] transition-transform duration-300 shadow-xl`}
                     >
                       {plan.highlight && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-purple-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-purple-950 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 z-10 whitespace-nowrap">
                           Melhor Custo-Benefício
                         </div>
                       )}
 
-                      <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-3 mb-4 mt-2">
                         <div className="p-2 bg-white/10 rounded-lg">{plan.icon}</div>
                         <h3 className="text-lg font-bold text-white">{plan.title}</h3>
                       </div>
@@ -177,9 +177,9 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
                       <button
                         onClick={() => handleBuy(plan)}
                         disabled={!!loading}
-                        className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                        className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm shadow-lg ${
                           plan.highlight 
-                            ? 'bg-gold text-purple-900 hover:bg-yellow-400 shadow-lg shadow-gold/20' 
+                            ? 'bg-purple-500 text-white hover:bg-yellow-400 hover:text-purple-900 border border-purple-400 shadow-purple-900/50' 
                             : 'bg-white/10 text-white hover:bg-white/20 border border-white/10'
                         }`}
                       >
@@ -190,7 +190,7 @@ const PlansModal: React.FC<PlansModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 
                 <p className="text-center text-slate-500 text-[10px] mt-8">
-                  Seus créditos não expiram. Use quando precisar.
+                  Pagamento seguro via Mercado Pago. Liberação imediata.
                 </p>
               </div>
             </motion.div>
