@@ -1,9 +1,9 @@
 const mercadopago = require('mercadopago');
 
 exports.handler = async function(event, context) {
-  // 1. Configuração CORRETA para versão 1.x
+  // SUA CHAVE DE ACESSO NOVA (Backend)
   mercadopago.configure({
-    access_token: process.env.MP_ACCESS_TOKEN
+    access_token: 'APP_USR-8229943388926691-090217-058ca460e5c70723e771ba6c5c7e0509-241067158'
   });
 
   const headers = {
@@ -17,19 +17,28 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const { title, price, quantity, userId } = JSON.parse(event.body);
+    const { title, price, quantity, userId, email } = JSON.parse(event.body);
     const SITE_URL = process.env.URL || 'https://vozesdooraculo.netlify.app';
 
-    // 2. Criação da preferência
     const preference = {
       items: [
         {
           title: title,
           unit_price: parseFloat(price),
           quantity: parseInt(quantity),
-          currency_id: 'BRL'
+          currency_id: 'BRL',
+          category_id: 'virtual_goods'
         }
       ],
+      // Envia o e-mail para o MP saber quem é
+      payer: {
+        email: email || 'cliente@vozesdooraculo.com' 
+      },
+      // FUNDAMENTAL PARA NÃO DAR ERRO NO BRICK:
+      shipments: {
+        mode: 'not_specified', 
+      },
+      binary_mode: true,
       external_reference: userId,
       notification_url: `${SITE_URL}/.netlify/functions/mp-webhook`,
       payment_methods: {
@@ -37,6 +46,7 @@ exports.handler = async function(event, context) {
         excluded_payment_methods: [],
         installments: 12
       },
+      // Nota: No modo Brick, o back_urls é menos usado, mas mantemos por segurança
       back_urls: {
         success: `${SITE_URL}/#/dashboard`,
         failure: `${SITE_URL}/#/dashboard`,
@@ -46,8 +56,6 @@ exports.handler = async function(event, context) {
     };
 
     const response = await mercadopago.preferences.create(preference);
-    
-    console.log("Preferência criada:", response.body.id);
     
     return {
       statusCode: 200,
