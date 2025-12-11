@@ -1,26 +1,31 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async function(event, context) {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS, DELETE'
+  };
+
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   try {
-    const token = event.headers.authorization?.split('Bearer ')[1];
-    const { clientId } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    // Aceita os dois formatos que seu site envia
+    const targetId = body.id || body.clientId; 
+    
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-    const { data: { user } } = await supabase.auth.getUser(token);
-    const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
-    if (userData?.role !== 'admin') return { statusCode: 403, body: 'Acesso negado' };
+    // 1. Deleta do Auth (Login)
+    const { error: authError } = await supabase.auth.admin.deleteUser(targetId);
+    if (authError) throw authError;
 
-    // Deleta do Auth (A tabela users deve ter cascade, senão deletamos manualmente)
-    const { error } = await supabase.auth.admin.deleteUser(clientId);
-    if (error) throw error;
+    // 2. Deleta da tabela 'users' (Limpeza visual)
+    await supabase.from('users').delete().eq('id', targetId);
 
-    // Garante limpeza da tabela publica também
-    await supabase.from('users').delete().eq('id', clientId);
-
-    return { statusCode: 200, body: JSON.stringify({ message: 'Deletado' }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ message: 'Deletado' }) };
   } catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    console.log(error);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
   }
 };

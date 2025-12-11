@@ -28,15 +28,35 @@ const Dreams: React.FC = () => {
     loading, setLoading
   } = useDreamStore();
 
+  // --- FUNÇÃO PARA DEIXAR O TEXTO BONITO (REMOVE **) ---
+  const renderFormattedText = (text: string) => {
+    if (!text) return null;
+    
+    // Divide o texto onde tiver **
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    
+    return parts.map((part, index) => {
+      // Se a parte começar e terminar com **, é negrito
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Remove os asteriscos e aplica estilo Dourado/Roxo
+        return (
+          <strong key={index} className="text-purple-300 font-bold">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      // Texto normal
+      return part;
+    });
+  };
+
   // --- 1. INICIALIZAÇÃO E RECUPERAÇÃO DE ESTADO ---
   useEffect(() => {
-    // Checar usuário
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user)).catch(() => {});
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
 
-    // Tentar recuperar estado salvo (Memória)
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
@@ -47,28 +67,24 @@ const Dreams: React.FC = () => {
     } catch (e) { }
 
     return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- 2. SALVAR ESTADO A CADA MUDANÇA ---
+  // --- 2. SALVAR ESTADO ---
   useEffect(() => {
     const toStore = { dreamText, interpretation };
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(toStore)); } catch (e) {}
   }, [dreamText, interpretation]);
 
-  // --- AÇÕES E FLUXO ---
-
+  // --- AÇÕES ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dreamText.trim()) return;
 
-    // A. Verificar Login
     if (!user) {
       setShowAuth(true);
       return;
     }
 
-    // B. Verificar Créditos (Pedágio)
     const creditCheck = await consumeCredit(user.id);
     if (!creditCheck.success) {
       if (creditCheck.message === 'no_credits') {
@@ -79,7 +95,6 @@ const Dreams: React.FC = () => {
       return;
     }
 
-    // C. Processar (Se pagou)
     setLoading(true);
     try {
       const result = await interpretDream(dreamText);
@@ -96,7 +111,6 @@ const Dreams: React.FC = () => {
     }
   };
 
-  // Reset Manual (Limpa memória e estado)
   const handleNewDream = () => {
     setInterpretation(null);
     setDreamText('');
@@ -138,7 +152,6 @@ const Dreams: React.FC = () => {
     }
   };
 
-  // Lógica Condicional de Layout (Igual ao Tarot)
   const isResultMode = !!interpretation;
 
   return (
@@ -158,7 +171,6 @@ const Dreams: React.FC = () => {
         }
       `}</style>
 
-      {/* MODAIS GLOBAIS */}
       <AuthModal 
         isOpen={showAuth} 
         onClose={() => setShowAuth(false)} 
@@ -174,7 +186,6 @@ const Dreams: React.FC = () => {
         }}
       />
       
-      {/* HEADER SEMPRE VISÍVEL */}
       <div className="text-center mb-10 animate-fade-in-up">
         <h2 className="font-serif text-3xl text-white mb-2 flex justify-center items-center gap-2">
            <Moon className="w-6 h-6 text-purple-300" /> Guardião dos Sonhos
@@ -184,7 +195,6 @@ const Dreams: React.FC = () => {
         </p>
       </div>
 
-      {/* INPUT */}
       {!interpretation && (
         <form onSubmit={handleSubmit} className="w-full relative mb-8 animate-fade-in">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-lg -z-10"></div>
@@ -219,7 +229,6 @@ const Dreams: React.FC = () => {
         </form>
       )}
 
-      {/* RESULTADO */}
       {interpretation && (
         <div className="w-full flex flex-col gap-8 animate-fade-in-up pb-20">
             
@@ -232,9 +241,12 @@ const Dreams: React.FC = () => {
               <h3 className="font-serif text-2xl text-purple-200 mb-6 flex items-center justify-center gap-2">
                 <Moon className="w-6 h-6" /> O Significado
               </h3>
+              
+              {/* AQUI ESTÁ A MÁGICA DO NEGRITO */}
               <div className="text-slate-200 leading-loose font-light whitespace-pre-wrap text-lg">
-                {interpretation}
+                {renderFormattedText(interpretation)}
               </div>
+
               <div className="mt-8 pt-6 border-t border-white/5 text-center">
                 <p className="text-xs text-slate-500 uppercase tracking-widest">
                   Vozes do Oráculo • Interpretação de Sonhos

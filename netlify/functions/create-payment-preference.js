@@ -1,9 +1,9 @@
 const mercadopago = require('mercadopago');
 
 exports.handler = async function(event, context) {
-  // SUA CHAVE DE PRODUÇÃO NOVA
+  // Configura a chave de acesso do Mercado Pago
   mercadopago.configure({
-    access_token: 'APP_USR-8229943388926691-090217-058ca460e5c70723e771ba6c5c7e0509-241067158'
+    access_token: process.env.MP_ACCESS_TOKEN
   });
 
   const headers = {
@@ -18,7 +18,10 @@ exports.handler = async function(event, context) {
 
   try {
     const { title, price, quantity, userId, email } = JSON.parse(event.body);
-    const SITE_URL = process.env.URL || 'https://vozesdooraculo.netlify.app';
+    
+    // CORREÇÃO: Definir a URL base explicitamente sem o '/#/dashboard'
+    // Isso força o navegador a recarregar a página ao clicar em Voltar
+    const BASE_URL = 'https://vozesdooraculo.com.br';
 
     const preference = {
       items: [
@@ -30,26 +33,23 @@ exports.handler = async function(event, context) {
           category_id: 'virtual_goods'
         }
       ],
-      // OBRIGATÓRIO: Enviar o e-mail para o Pix não pedir na tela
       payer: {
-        email: email || 'cliente@vozesdooraculo.com'
+        email: email
       },
-      // OBRIGATÓRIO: Avisar que não tem frete para não dar erro de endereço
-      shipments: {
-        mode: 'not_specified'
-      },
-      binary_mode: true,
       external_reference: userId,
-      notification_url: `${SITE_URL}/.netlify/functions/mp-webhook`,
+      notification_url: `${BASE_URL}/.netlify/functions/mp-webhook`,
       payment_methods: {
         excluded_payment_types: [],
         excluded_payment_methods: [],
         installments: 12
       },
+      // AQUI ESTÁ A MÁGICA:
+      // Removemos o '/#/dashboard' das URLs de retorno.
+      // Ao redirecionar para a raiz, o modal some e o site carrega normalmente.
       back_urls: {
-        success: `${SITE_URL}/#/dashboard`,
-        failure: `${SITE_URL}/#/dashboard`,
-        pending: `${SITE_URL}/#/dashboard`
+        success: BASE_URL,
+        failure: BASE_URL,
+        pending: BASE_URL
       },
       auto_return: "approved",
     };

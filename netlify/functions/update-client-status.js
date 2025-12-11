@@ -1,25 +1,41 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async function(event, context) {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   try {
-    const token = event.headers.authorization?.split('Bearer ')[1];
-    const { clientId, credits, subscription_status } = JSON.parse(event.body);
-    
+    // Aceita os formatos do seu front (clientId ou id)
+    const body = JSON.parse(event.body);
+    const id = body.id || body.clientId;
+    const { name, credits, role, subscription_status } = body;
+
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-    // Verifica Admin
-    const { data: { user } } = await supabase.auth.getUser(token);
-    const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
-    if (userData?.role !== 'admin') return { statusCode: 403, body: 'Acesso negado' };
+    // Monta o objeto de atualização
+    const updates = {};
+    if (name) updates.name = name;
+    if (credits !== undefined) updates.credits = parseInt(credits);
+    // Atualiza role se vier 'role' ou 'subscription_status' for admin
+    if (role) updates.role = role;
+    if (subscription_status === 'admin') updates.role = 'admin';
 
-    // Atualiza
-    const { error } = await supabase.from('users').update({ credits, subscription_status }).eq('id', clientId);
+    // Atualiza na tabela 'users'
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', id)
+      .select();
+
     if (error) throw error;
 
-    return { statusCode: 200, body: JSON.stringify({ message: 'Atualizado' }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ message: 'Atualizado', data }) };
   } catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
   }
 };

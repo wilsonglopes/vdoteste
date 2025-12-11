@@ -1,224 +1,357 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Moon, Star, ArrowRight, ShieldCheck, Heart, ChevronDown, Zap, MessageCircle, Users } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { 
+  Sparkles, Star, ArrowRight, CheckCircle2, Zap, HelpCircle, 
+  BrainCircuit, MessageSquare, MousePointerClick, Eye, Gift
+} from 'lucide-react';
+import AuthModal from '../components/AuthModal'; // <--- Importando o Modal
+
+// --- ASSETS ---
+const HERO_BG = "https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/criativos/fundo1_lp.jpg";
+const LEQUE_CARTAS = "https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/criativos/leque.jpg"; 
+
+// --- IMAGENS DAS CARTAS ---
+const CARD_IMAGES = {
+  FUTURO: "https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/criativos/sol.jpg",     
+  AMOR: "https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/criativos/coracao.jpg",   
+  FINANCAS: "https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/criativos/peixes.jpg", 
+  DESTINO: "https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/criativos/chave.jpg"    
+};
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false); // Estado para controlar o modal
 
-  const goToApp = () => {
-    navigate('/'); 
+  const handleRegister = () => {
+    // Agora abre o modal em vez de redirecionar
+    setShowAuthModal(true);
   };
 
-  const faqs = [
-    { q: "Como o oráculo consegue ler as cartas?", a: "O Vozes do Oráculo utiliza um sistema avançado que combina milhares de padrões de tiragens clássicas do Baralho Cigano com arquétipos profundos, cruzando os significados das cartas com a sua energia e pergunta para gerar uma leitura única." },
-    { q: "É seguro consultar?", a: "Totalmente. Utilizamos plataformas de pagamento blindadas e seus dados pessoais e espirituais são mantidos em sigilo absoluto no seu grimório pessoal." },
-    { q: "Preciso ser esotérico para usar?", a: "Não! O Vozes do Oráculo é para todos que buscam clareza, seja no amor, trabalho ou autoconhecimento. A linguagem é simples, direta e acolhedora." },
-    { q: "O que acontece se eu não gostar?", a: "Confiamos tanto na conexão que a primeira leitura é um presente nosso (bônus de cadastro). Você vive a experiência sem compromisso." }
-  ];
+  const handleAuthSuccess = () => {
+    // Quando o cadastro terminar com sucesso, vai para o dashboard
+    navigate('/dashboard');
+  };
 
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+  };
 
   return (
-    <div className="min-h-screen bg-[#050511] text-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-white font-sans overflow-x-hidden selection:bg-purple-500 selection:text-white">
       
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 w-full z-50 bg-[#050511]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Moon className="w-6 h-6 text-purple-400 fill-purple-400" />
-            <span className="font-serif text-xl font-bold tracking-wide">Vozes do Oráculo</span>
-          </div>
-          <button 
-            onClick={goToApp}
-            className="text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 px-5 py-2 rounded-full transition-all"
+      {/* MODAL DE CADASTRO (Invisível até clicar no botão) */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        onSuccess={handleAuthSuccess}
+      />
+
+      {/* ================= HERO SECTION (FULL SCREEN) ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 min-h-screen flex flex-col items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img src={HERO_BG} alt="Universo Místico" className="w-full h-full object-cover opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-black/40" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-7xl px-4 mx-auto text-center flex flex-col items-center mt-10">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-6 flex items-center gap-2 bg-green-900/30 backdrop-blur-md px-4 py-1.5 rounded-full border border-green-500/30"
           >
-            Entrar
-          </button>
-        </div>
-      </nav>
+            <Gift size={14} className="text-green-400" />
+            <span className="text-xs font-bold text-green-200 uppercase tracking-widest">Oferta de Boas-Vindas</span>
+          </motion.div>
 
-      {/* HERO */}
-      <header className="relative pt-24 pb-20 lg:pt-40 lg:pb-32 px-4 text-center overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-600/20 blur-[120px] rounded-full -z-10 animate-pulse-slow"></div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.8 }}
-          className="max-w-5xl mx-auto"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 text-purple-200 text-xs font-bold tracking-widest uppercase mb-8 shadow-lg shadow-purple-500/20">
-            <Sparkles size={14} className="text-yellow-400" /> Sabedoria Ancestral
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold mb-8 leading-snug bg-clip-text text-transparent bg-gradient-to-b from-white via-purple-100 to-purple-300 drop-shadow-lg py-4">
-            O Universo tem uma <br/> mensagem para você.
-          </h1>
-          
-          <p className="text-lg md:text-2xl text-slate-300 mb-4 max-w-3xl mx-auto leading-relaxed font-light">
-            Desbloqueie respostas imediatas sobre seu destino. <br className="hidden md:block"/>
-            A magia do <strong className="text-white">Baralho Cigano</strong> interpretada com precisão absoluta para o seu momento.
-          </p>
+          <motion.h1 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="text-4xl md:text-6xl lg:text-8xl font-serif text-white mb-6 drop-shadow-[0_0_25px_rgba(0,0,0,0.8)] leading-tight uppercase tracking-tighter"
+          >
+            Cadastre-se e Ganhe<br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-white to-purple-400">3 consultas gratuitas</span>
+          </motion.h1>
 
-          <p className="text-sm text-purple-300 italic mb-10 max-w-lg mx-auto border-l-2 border-purple-500 pl-4 py-2 bg-purple-900/10 rounded-r-lg">
-            "Para uma revelação verdadeira, respire fundo e concentre-se em sua pergunta. Atraia boas energias antes de iniciar."
-          </p>
-          
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={goToApp}
-              className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-lg font-bold px-12 py-5 rounded-full shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:shadow-[0_0_60px_rgba(168,85,247,0.7)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
-            >
-              Consultar Grátis
-              <ArrowRight size={22} />
-            </button>
-            <span className="text-xs text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Bônus Disponível
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-lg md:text-2xl text-slate-200 font-light max-w-4xl mx-auto mb-10 leading-relaxed drop-shadow-md"
+          >
+            Análise simbólica e interpretativa <strong className="text-yellow-400">para quem busca clareza interior</strong> e compreensão mais profunda de si mesmo(a).
+          </motion.p>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleRegister}
+            className="group relative bg-white text-black px-12 py-5 rounded-full text-lg font-bold uppercase tracking-widest shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all hover:shadow-[0_0_60px_rgba(255,255,255,0.5)]"
+          >
+            <span className="relative z-10 flex items-center gap-3">
+              Resgatar Meus 3 Créditos <ArrowRight size={20} />
             </span>
-          </div>
-        </motion.div>
-      </header>
-
-      {/* SOCIAL PROOF */}
-      <div className="w-full border-y border-white/5 bg-black/20 py-8">
-        <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center md:justify-between gap-8 text-slate-400 text-sm font-bold uppercase tracking-widest text-center">
-          <span className="flex items-center gap-2"><Users className="text-purple-500" /> +15.000 Leituras Realizadas</span>
-          <span className="flex items-center gap-2"><ShieldCheck className="text-green-500" /> 100% Seguro e Privado</span>
-          <span className="flex items-center gap-2"><Star className="text-yellow-500" /> 4.9/5 Avaliação Média</span>
+          </motion.button>
+          
+          <p className="mt-4 text-xs text-slate-400 uppercase tracking-widest">Sem necessidade de cartão de crédito</p>
         </div>
-      </div>
+      </section>
 
-      {/* COMO FUNCIONA */}
-      <section className="py-24 px-4 relative">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4">Como funciona a magia?</h2>
-            <p className="text-slate-400">Em apenas 3 passos simples, você terá a clareza que procura.</p>
+      {/* ================= O QUE RESOLVEMOS (FULL WIDTH) ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 py-24 bg-[#080808] overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-purple-900/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="w-full max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl md:text-6xl font-serif text-white mb-4 uppercase tracking-wide">O Que Vamos Revelar?</h2>
+            <p className="text-purple-300/80 text-sm md:text-base uppercase tracking-widest">Use seus créditos grátis em qualquer área</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full">
             {[
-              { icon: MessageCircle, title: "1. Pergunte", text: "Concentre-se no que te aflige. Amor, dinheiro ou saúde? Digite sua dúvida para o oráculo." },
-              { icon: Sparkles, title: "2. Escolha", text: "Use sua intuição para selecionar 9 cartas do baralho sagrado. Sua energia guia o resultado." },
-              { icon: Zap, title: "3. Receba", text: "Nossa sabedoria analisa os arquétipos e te entrega uma interpretação detalhada e acolhedora em segundos." }
-            ].map((step, i) => (
-              <div key={i} className="bg-[#111022] p-8 rounded-3xl border border-white/5 hover:border-purple-500/50 transition-all group hover:-translate-y-2">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-900/50 to-slate-900 rounded-2xl flex items-center justify-center mb-6 group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all">
-                  <step.icon className="w-8 h-8 text-purple-300" />
+              { title: "O Futuro", subtitle: "O SOL", img: CARD_IMAGES.FUTURO, desc: "Reflexões sobre vitalidade, energia e clareza." },
+              { title: "Amor", subtitle: "O CORAÇÃO", img: CARD_IMAGES.AMOR, desc: "Temas relacionados a sentimentos, vínculos e afetos." },
+              { title: "Finanças", subtitle: "OS PEIXES", img: CARD_IMAGES.FINANCAS, desc: "Simbologia ligada a movimento, fluxo e possibilidades." },
+              { title: "Destino", subtitle: "A CHAVE", img: CARD_IMAGES.DESTINO, desc: "Representações de abertura, escolhas e novos caminhos." },
+            ].map((card, i) => (
+              <motion.div 
+                key={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                className="group cursor-pointer flex flex-col items-center text-center w-full"
+                onClick={handleRegister}
+              >
+                <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-6 transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] border border-purple-500/20 group-hover:border-purple-500/80">
+                  <div className="absolute inset-0 bg-purple-900/10 group-hover:bg-transparent transition-colors z-10" />
+                  <img src={card.img} alt={card.title} className="w-full h-full object-cover transition-all duration-700 transform group-hover:scale-105" />
+                  <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black via-black/90 to-transparent z-20">
+                     <span className="text-xs md:text-sm font-bold text-purple-200 uppercase tracking-widest">{card.subtitle}</span>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-4 text-white">{step.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{step.text}</p>
-              </div>
+                <h3 className="text-2xl font-serif text-white mb-2 group-hover:text-purple-400 transition-colors">{card.title}</h3>
+                <p className="text-slate-500 text-sm px-2 leading-relaxed">{card.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* DEPOIMENTOS */}
-      <section className="py-24 bg-gradient-to-b from-[#0f0c29] to-[#1a1638]">
+      {/* ================= SEÇÃO DO LEQUE (INSERIDA) ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 py-12 bg-[#050505] overflow-hidden flex justify-center">
+        <div className="relative w-full max-w-screen-2xl px-4 flex justify-center">
+          <motion.img 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+            src={LEQUE_CARTAS} 
+            alt="Escolha suas Cartas" 
+            className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(168,85,247,0.2)]"
+          />
+          <div className="absolute top-0 left-0 h-full w-1/5 bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 h-full w-1/5 bg-gradient-to-l from-[#050505] via-[#050505]/90 to-transparent pointer-events-none" />
+        </div>
+      </section>
+
+      {/* ================= COMO FUNCIONA (FULL WIDTH) ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 py-24 bg-[#050505] border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
+          <div className="text-center mb-16">
+             <h2 className="text-3xl md:text-5xl font-serif text-white mb-4">Como Funciona?</h2>
+             <p className="text-slate-400 text-lg">Em 4 passos simples você terá a clareza que precisa.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+             {[
+               { 
+                 step: "01", 
+                 title: "Mentalize", 
+                 text: "Concentre-se no que você precisa saber. Amor, dinheiro ou conselho geral?",
+                 icon: <BrainCircuit size={28} className="text-purple-400"/>
+               },
+               { 
+                 step: "02", 
+                 title: "Cadastre-se", 
+                 text: "Crie sua conta gratuita em segundos para liberar o acesso ao oráculo.",
+                 icon: <MousePointerClick size={28} className="text-blue-400"/>
+               },
+               { 
+                 step: "03", 
+                 title: "Escolha", 
+                 text: "Na nossa mesa virtual, sua intuição guia a escolha das cartas.",
+                 icon: <Sparkles size={28} className="text-pink-400"/>
+               },
+               { 
+                 step: "04", 
+                 title: "Revele", 
+                 text: "Receba sua interpretação completa e imediata usando seus créditos grátis.",
+                 icon: <Eye size={28} className="text-yellow-400"/>
+               }
+             ].map((item, i) => (
+               <motion.div 
+                 key={i}
+                 initial={{ opacity: 0, y: 20 }}
+                 whileInView={{ opacity: 1, y: 0 }}
+                 viewport={{ once: true }}
+                 transition={{ delay: i * 0.1 }}
+                 className="bg-[#0a0a0a] border border-white/5 p-8 rounded-2xl relative group hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col items-start w-full"
+               >
+                 <div className="absolute top-4 right-4 opacity-10 font-serif text-7xl font-bold text-white group-hover:opacity-20 transition-opacity">
+                   {item.step}
+                 </div>
+                 
+                 <div className="mb-6 p-4 bg-white/5 rounded-2xl w-fit group-hover:bg-white/10 transition-colors border border-white/5">
+                   {item.icon}
+                 </div>
+
+                 <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors">{item.title}</h3>
+                 <p className="text-slate-400 text-sm leading-relaxed flex-grow">
+                   {item.text}
+                 </p>
+               </motion.div>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= OFERTA DE CADASTRO ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 py-24 bg-[#080808]">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl md:text-5xl font-serif text-white mb-4">Seu Destino Espera</h2>
+            <p className="text-slate-400">Não cobramos nada para você começar.</p>
+          </div>
+
+          <div className="relative p-[2px] rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500">
+            <div className="bg-[#0f0f15] rounded-[22px] p-8 md:p-12 text-center relative overflow-hidden">
+              
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="bg-yellow-500/20 p-4 rounded-full mb-6">
+                  <Gift size={48} className="text-yellow-400" />
+                </div>
+
+                <h3 className="text-3xl md:text-4xl font-bold text-white mb-2">Conta Gratuita</h3>
+                <div className="text-5xl md:text-6xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 mb-6 font-bold">
+                  3 Créditos
+                </div>
+
+                <ul className="space-y-4 mb-10 text-left inline-block">
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="text-green-400" size={20} />
+                    <span>Acesso ao Oráculo de Cartas Ciganas</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="text-green-400" size={20} />
+                    <span>Interpretação de Sonhos</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="text-green-400" size={20} />
+                    <span>Histórico das suas leituras salvo</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <Zap className="text-yellow-400" size={20} />
+                    <span className="text-white font-bold">Resultado Imediato</span>
+                  </li>
+                </ul>
+
+                <button 
+                  onClick={handleRegister}
+                  className="w-full md:w-auto px-12 py-5 bg-white text-black font-bold rounded-full hover:bg-green-400 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] text-lg uppercase tracking-wider flex items-center justify-center gap-3"
+                >
+                  <Star size={20} className="fill-black" />
+                  Criar Conta Grátis
+                </button>
+                
+                <p className="mt-4 text-slate-500 text-sm">Promoção por tempo limitado.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= DEPOIMENTOS ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 py-24 bg-[#0a0a0a] border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl md:text-5xl font-serif font-bold mb-16 text-center">Histórias de quem já consultou</h2>
+          <h2 className="text-3xl md:text-5xl font-serif text-center mb-16 text-white">Resultados Reais</h2>
+          
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: "Camila R.", role: "Artesã", text: "Eu estava travada sem saber se investia no meu ateliê. A leitura foi tão clara que me deu coragem. Hoje estou vendendo o dobro!", stars: 5 },
-              { name: "Juliana M.", role: "Designer", text: "Impressionante. Eu sempre fui cética, mas a interpretação do meu sonho bateu exatamente com o que estou vivendo. Arrepiei.", stars: 5 },
-              { name: "Patricia S.", role: "Empresária", text: "Uso toda semana para planejar meus passos. É como ter uma mentora espiritual no bolso. O valor é simbólico pelo que entrega.", stars: 5 }
-            ].map((dep, i) => (
-              <div key={i} className="bg-[#0f0c29] p-8 rounded-2xl border border-white/10 relative">
-                <div className="absolute -top-4 left-8 text-6xl text-purple-800 opacity-50 font-serif">"</div>
-                <div className="flex gap-1 mb-6 text-yellow-500">
-                  {[...Array(dep.stars)].map((_, s) => <Star key={s} size={16} fill="currentColor" />)}
-                </div>
-                <p className="text-slate-300 italic mb-6 relative z-10 leading-relaxed">"{dep.text}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                    {dep.name.charAt(0)}
-                  </div>
+              {
+                name: "Renata V.",
+                img: "https://randomuser.me/api/portraits/women/65.jpg",
+                text: "Eu estava cética. Nunca imaginei que uma leitura online pudesse ser tão precisa. As cartas descreveram exatamente a situação com meu marido.",
+              },
+              {
+                name: "Marcos A.",
+                img: "https://randomuser.me/api/portraits/men/44.jpg",
+                text: "A tiragem de carreira abriu meus olhos. Eu estava preso em um emprego tóxico por medo. O oráculo me deu a confirmação que eu precisava.",
+              },
+              {
+                name: "Juliana K.",
+                img: "https://randomuser.me/api/portraits/women/90.jpg",
+                text: "Impressionante a precisão. Perguntei sobre uma pessoa do passado e a resposta foi cirúrgica. Tirei um peso das costas.",
+              },
+              {
+                name: "Patrícia L.",
+                img: "https://randomuser.me/api/portraits/women/22.jpg",
+                text: "Uso toda semana para ver a energia do meu relacionamento. É incrível como bate tudo. Me ajuda a evitar brigas.",
+              },
+              {
+                name: "Eduardo S.",
+                img: "https://randomuser.me/api/portraits/men/86.jpg",
+                text: "A interpretação é muito profunda, não é aquelas coisas genéricas de horóscopo. Fala direto com a sua alma.",
+              },
+              {
+                name: "Camila T.",
+                img: "https://randomuser.me/api/portraits/women/12.jpg",
+                text: "Estava em dúvida entre dois caminhos. O jogo da ferradura me mostrou as consequências de cada um. Escolhi com paz.",
+              }
+            ].map((user, i) => (
+              <div key={i} className="bg-[#121214] p-6 rounded-2xl border border-white/5 hover:border-purple-500/20 transition-all">
+                <div className="flex items-center gap-4 mb-4">
+                  <img src={user.img} alt={user.name} className="w-12 h-12 rounded-full border border-purple-500/50 object-cover" />
                   <div>
-                    <p className="font-bold text-white text-sm">{dep.name}</p>
-                    <p className="text-xs text-purple-400">{dep.role}</p>
+                    <h4 className="font-bold text-white text-sm">{user.name}</h4>
+                    <div className="flex text-yellow-500 text-[10px] gap-0.5 mt-1">
+                      <Star size={10} fill="currentColor" /><Star size={10} fill="currentColor" /><Star size={10} fill="currentColor" /><Star size={10} fill="currentColor" /><Star size={10} fill="currentColor" />
+                    </div>
                   </div>
                 </div>
+                <p className="text-slate-400 font-light text-sm italic leading-relaxed">"{user.text}"</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-24 px-4 max-w-3xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-serif font-bold mb-12 text-center">Perguntas Frequentes</h2>
-        <div className="space-y-4">
-          {faqs.map((faq, i) => (
-            <div key={i} className="border border-white/10 rounded-xl bg-[#111022] overflow-hidden">
-              <button 
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex justify-between items-center p-6 text-left hover:bg-white/5 transition-colors"
-              >
-                <span className="font-medium text-lg">{faq.q}</span>
-                <ChevronDown className={`transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {openFaq === i && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-6 pt-0 text-slate-400 leading-relaxed border-t border-white/5">
-                      <p className="mb-4">{faq.a}</p>
-                      {i === 3 && (
-                        <button 
-                          onClick={goToApp}
-                          className="text-sm bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-full font-bold transition-colors inline-flex items-center gap-2"
-                        >
-                          Resgatar meu Bônus Grátis <ArrowRight size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA FINAL – CORRIGIDO */}
-      <section className="py-20 px-10 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/30 to-transparent pointer-events-none"></div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-serif font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 leading-normal md:leading-tight break-words">
-            Seu futuro espera por uma pergunta.
-          </h2>
-
-          <p className="text-xl text-slate-400 mb-12">
-            Cadastre-se agora e receba <strong>1 Crédito Grátis</strong> para sua primeira revelação.
-          </p>
-          
-          <button 
-            onClick={goToApp}
-            className="bg-white text-purple-950 hover:bg-purple-50 font-bold px-12 py-5 rounded-full text-xl shadow-[0_0_60px_rgba(255,255,255,0.3)] transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
-          >
-            Quero Minha Leitura Grátis
-            <ArrowRight size={24} />
-          </button>
-          
-          <div className="mt-8 flex justify-center gap-6 text-xs text-slate-500 uppercase tracking-widest">
-            <span className="flex items-center gap-1"><ShieldCheck size={14} /> Compra Segura</span>
-            <span className="flex items-center gap-1"><Heart size={14} /> Feito com Magia</span>
+      {/* ================= FAQ ================= */}
+      <section className="relative w-screen left-1/2 -translate-x-1/2 py-20 bg-[#050505] border-t border-white/5">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-3xl font-serif text-center text-white mb-10">Dúvidas Frequentes</h2>
+          <div className="space-y-4">
+            {[
+              { q: "É realmente grátis?", a: "Sim! Ao se cadastrar, você ganha automaticamente 3 créditos para usar como quiser. Sem pegadinhas." },
+              { q: "Preciso cadastrar cartão?", a: "Não. O cadastro pede apenas seu nome e e-mail para salvar seu histórico de leituras." },
+              { q: "Como funciona a leitura?", a: "Você mentaliza sua questão, escolhe as cartas e nossa tecnologia interpreta o significado baseada na sabedoria ancestral." }
+            ].map((faq, i) => (
+              <div key={i} className="border border-white/10 rounded-xl p-6 bg-white/5">
+                <h3 className="text-white font-bold mb-2 flex items-center gap-2"><HelpCircle size={18} className="text-purple-400"/> {faq.q}</h3>
+                <p className="text-slate-400 text-sm pl-6">{faq.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <footer className="py-10 text-center text-slate-600 text-xs border-t border-white/5 bg-black">
-        <p>© 2025 Vozes do Oráculo. Todos os direitos reservados.</p>
+      <footer className="relative w-screen left-1/2 -translate-x-1/2 py-10 text-center border-t border-white/10 bg-black text-slate-600 text-xs">
+        <p>&copy; 2025 Vozes do Oráculo. Todos os direitos reservados.</p>
       </footer>
-
     </div>
   );
 };

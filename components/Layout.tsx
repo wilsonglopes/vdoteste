@@ -1,7 +1,9 @@
-import React, { ReactNode } from 'react';
-import { Moon, Star, User } from 'lucide-react';
+// components/Layout.tsx
+import React, { ReactNode, useEffect, useState } from 'react';
+import { Moon, Star, User, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import InstallButton from './InstallButton'; // <--- Importação Nova
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,6 +11,25 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, user }) => {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.role === 'admin') {
+          setIsAdmin(true);
+        }
+      }
+    };
+    checkRole();
+  }, [user]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.reload();
@@ -18,11 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
     <div className="min-h-screen w-full relative overflow-hidden flex flex-col font-sans text-slate-200 selection:bg-purple-500/30">
       {/* Mystical Background */}
       <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-black"></div>
-      
-      {/* Stars Overlay */}
       <div className="fixed inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
-
-      {/* Ambient Glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[100px] rounded-full z-0 pointer-events-none"></div>
 
       {/* Header */}
@@ -40,19 +57,32 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
         </Link>
 
         <div className="flex items-center gap-4">
+          {/* Botão de Instalar App (Aparece para todos) */}
+          <InstallButton />
+
           {user && (
             <>
+              {isAdmin && (
+                <Link 
+                  to="/admin" 
+                  className="hidden md:flex items-center gap-2 text-xs tracking-widest uppercase text-red-300 hover:text-white transition-colors border border-red-500/30 hover:border-red-400/50 bg-red-500/10 hover:bg-red-500/20 px-4 py-1.5 rounded-full"
+                >
+                  <ShieldCheck size={14} />
+                  <span>Admin</span>
+                </Link>
+              )}
+
               <Link 
                 to="/dashboard" 
                 className="flex items-center gap-2 text-xs tracking-widest uppercase text-purple-300 hover:text-white transition-colors border border-purple-500/30 hover:border-purple-400/50 bg-purple-500/10 hover:bg-purple-500/20 px-4 py-1.5 rounded-full"
               >
                 <User size={14} />
-                <span className="hidden md:inline">Meu Grimório</span>
+                <span className="hidden md:inline">Grimório</span>
               </Link>
 
               <button 
                 onClick={handleLogout}
-                className="text-xs tracking-widest uppercase text-slate-400 hover:text-white transition-colors border border-transparent hover:border-white/10 px-3 py-1 rounded-full"
+                className="text-xs tracking-widest uppercase text-slate-400 hover:text-white transition-colors border border-transparent hover:border-white/10 px-2 py-1 rounded-full"
               >
                 Sair
               </button>
@@ -61,12 +91,10 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
         </div>
       </header>
 
-      {/* Main Content - ALTERADO AQUI: pt-0 remove o espaço do topo */}
       <main className="relative z-10 flex flex-col items-center w-full max-w-5xl mx-auto px-4 pb-6 pt-0">
         {children}
       </main>
 
-      {/* Footer */}
       <footer className="relative z-10 w-full text-center py-6 text-slate-600 text-xs mb-4">
         <p>© {new Date().getFullYear()} Vozes do Oráculo. Conexão estabelecida.</p>
       </footer>

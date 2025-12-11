@@ -1,11 +1,13 @@
-// App.tsx
 import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tarot from './pages/Tarot';
 import Dreams from './pages/Dreams';
-import Dashboard from './pages/Dashboard'; // <--- Importação Nova
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import LandingPage from './pages/LandingPage';
+import SelectSpread from './pages/SelectSpread'; // <--- 1. NOVO IMPORT
 import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
@@ -35,7 +37,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Wrapper para rotas que EXIGEM login (como o Dashboard)
+  // Wrapper para rotas que EXIGEM login
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!session) {
       return <Navigate to="/" replace />;
@@ -45,25 +47,45 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <Layout user={session?.user}>
-        <Routes>
-          <Route path="/" element={<Home user={session?.user} />} />
-          
-          {/* Rotas Abertas (A proteção agora é interna, no botão Revelar) */}
-          <Route path="/tarot" element={<Tarot />} />
-          <Route path="/dreams" element={<Dreams />} />
+      <Routes>
+        
+        {/* 1. ROTA DA LANDING PAGE (SEM LAYOUT/MENU) */}
+        {/* Mantida isolada aqui para não pegar o menu */}
+        <Route path="/landingpage" element={<LandingPage />} />
 
-          {/* Rota Protegida (Só entra logado) */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </Layout>
+        {/* 2. RESTO DO APP (COM LAYOUT/MENU) */}
+        <Route path="*" element={
+          <Layout user={session?.user}>
+            <Routes>
+              {/* Rota Raiz: Carrega a HOME original */}
+              <Route path="/" element={<Home user={session?.user} />} />
+              
+              {/* --- NOVA ROTA: SELEÇÃO DE LEITURA --- */}
+              {/* Aqui o usuário escolhe o tipo de tiragem (Ex, Mensal, etc) */}
+              <Route path="/nova-leitura" element={<SelectSpread />} />
+
+              {/* Outras rotas públicas ou do app */}
+              <Route path="/tarot" element={<Tarot />} />
+              <Route path="/dreams" element={<Dreams />} />
+              <Route path="/escolher" element={<Home user={session?.user} />} />
+
+              {/* Rota Protegida: Dashboard */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Rota Admin */}
+              <Route path="/admin" element={<AdminDashboard />} /> 
+            </Routes>
+          </Layout>
+        } />
+
+      </Routes>
     </Router>
   );
 };
