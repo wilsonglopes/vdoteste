@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Sparkles, Heart, Calendar, HelpCircle, 
-  Eye, RefreshCw, MessageCircle, GitBranch, Anchor 
+  Eye, RefreshCw, MessageCircle, GitBranch, Anchor, Split 
 } from 'lucide-react';
 import { SPREADS } from '../config/spreads';
 
@@ -11,19 +11,19 @@ const SelectSpread: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelect = (spreadId: string) => {
-    // Redireciona para o Tarot passando o ID do jogo escolhido
     navigate(`/tarot?spread=${spreadId}`);
   };
 
+  // Mapeamento de Ícones para os 7 Métodos
   const getIcon = (id: string) => {
     switch (id) {
-      case 'templo_afrodite': return <Sparkles className="text-purple-400" size={24} />;
-      case 'amor_fofoca': return <MessageCircle className="text-pink-500" size={24} />;
-      case 'ex': return <RefreshCw className="text-red-400" size={24} />;
-      case 'mensal': return <Calendar className="text-blue-400" size={24} />;
-      case 'vale_pena': return <HelpCircle className="text-yellow-400" size={24} />;
-      case 'ferradura': return <Anchor className="text-indigo-400" size={24} />;
-      case 'ficar_partir': return <GitBranch className="text-green-400" size={24} />;
+      case 'templo_afrodite': return <Sparkles className="text-purple-400" size={24} />; // 9 Cartas
+      case 'ex': return <RefreshCw className="text-red-400" size={24} />; // Ex
+      case 'vale_pena': return <HelpCircle className="text-yellow-400" size={24} />; // Vale a pena?
+      case 'mensal': return <Calendar className="text-blue-400" size={24} />; // Mensal
+      case 'ferradura': return <Anchor className="text-indigo-400" size={24} />; // Ferradura
+      case 'amor_fofoca': return <MessageCircle className="text-pink-500" size={24} />; // Fofoca
+      case 'ficar_partir': return <GitBranch className="text-green-400" size={24} />; // Ficar ou Partir
       default: return <Sparkles className="text-white" size={24} />;
     }
   };
@@ -43,8 +43,8 @@ const SelectSpread: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid de Opções */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Grid de Opções (Responsivo: 1 col mobile, 2 tablet, 3 desktop) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SPREADS.map((spread, index) => (
             <motion.div
               key={spread.id}
@@ -54,7 +54,7 @@ const SelectSpread: React.FC = () => {
               onClick={() => handleSelect(spread.id)}
               className="bg-[#121214] border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px]"
             >
-              {/* Highlight para jogos Premium (muitas cartas) */}
+              {/* Etiqueta Premium para jogos maiores (Fofoca 12 cartas) */}
               {spread.cardsCount >= 12 && (
                 <div className="absolute top-0 right-0 bg-pink-900/50 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20">
                   PREMIUM
