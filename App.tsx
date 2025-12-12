@@ -1,23 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import Home from './pages/Home';
+import Tarot from './pages/Tarot';
+import Dreams from './pages/Dreams';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import LandingPage from './pages/LandingPage';
-import Home from './pages/Home';
-import Dreams from './pages/Dreams';
-import SelectSpread from './pages/SelectSpread';
+import SelectSpread from './pages/SelectSpread'; // <--- 1. NOVO IMPORT
 import { supabase } from './services/supabase';
-
-// --- PÁGINAS DE JOGOS (CADA MÉTODO TEM SEU ARQUIVO) ---
-import Tarot from './pages/Tarot'; // Templo de Afrodite (9 Cartas) - Padrão
-import TarotEx from './pages/TarotEx'; // Tirada do Ex (5 Cartas)
-// Obs: Crie os arquivos abaixo (copiando do TarotEx e ajustando) para parar o erro de importação
-import TarotValePena from './pages/TarotValePena';
-import TarotMensal from './pages/TarotMensal';
-import TarotFerradura from './pages/TarotFerradura';
-import TarotFofoca from './pages/TarotFofoca';
-import TarotFicarPartir from './pages/TarotFicarPartir';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -59,30 +50,26 @@ const App: React.FC = () => {
       <Routes>
         
         {/* 1. ROTA DA LANDING PAGE (SEM LAYOUT/MENU) */}
+        {/* Mantida isolada aqui para não pegar o menu */}
         <Route path="/landingpage" element={<LandingPage />} />
 
         {/* 2. RESTO DO APP (COM LAYOUT/MENU) */}
         <Route path="*" element={
           <Layout user={session?.user}>
             <Routes>
-              {/* Home e Seleção */}
+              {/* Rota Raiz: Carrega a HOME original */}
               <Route path="/" element={<Home user={session?.user} />} />
+              
+              {/* --- NOVA ROTA: SELEÇÃO DE LEITURA --- */}
+              {/* Aqui o usuário escolhe o tipo de tiragem (Ex, Mensal, etc) */}
               <Route path="/nova-leitura" element={<SelectSpread />} />
 
-              {/* --- ROTAS DOS JOGOS DE TAROT (Separados por Arquivo) --- */}
-              <Route path="/tarot" element={<Tarot />} /> {/* Templo de Afrodite */}
-              <Route path="/tarot-ex" element={<TarotEx />} />
-              <Route path="/tarot-vale-pena" element={<TarotValePena />} />
-              <Route path="/tarot-mensal" element={<TarotMensal />} />
-              <Route path="/tarot-ferradura" element={<TarotFerradura />} />
-              <Route path="/tarot-fofoca" element={<TarotFofoca />} />
-              <Route path="/tarot-ficar-partir" element={<TarotFicarPartir />} />
-
-              {/* Outros Serviços */}
+              {/* Outras rotas públicas ou do app */}
+              <Route path="/tarot" element={<Tarot />} />
               <Route path="/dreams" element={<Dreams />} />
               <Route path="/escolher" element={<Home user={session?.user} />} />
 
-              {/* Áreas Protegidas */}
+              {/* Rota Protegida: Dashboard */}
               <Route 
                 path="/dashboard" 
                 element={
@@ -92,6 +79,7 @@ const App: React.FC = () => {
                 } 
               />
 
+              {/* Rota Admin */}
               <Route path="/admin" element={<AdminDashboard />} /> 
             </Routes>
           </Layout>
