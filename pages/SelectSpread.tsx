@@ -11,6 +11,7 @@ const SelectSpread: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelect = (spreadId: string) => {
+    // Redireciona para o Tarot passando o ID do jogo escolhido
     navigate(`/tarot?spread=${spreadId}`);
   };
 
@@ -51,7 +52,7 @@ const SelectSpread: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(spread.id)}
-              className="bg-[#121214] border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between"
+              className="bg-[#121214] border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px]"
             >
               {/* Highlight para jogos Premium (muitas cartas) */}
               {spread.cardsCount >= 12 && (
@@ -73,12 +74,12 @@ const SelectSpread: React.FC = () => {
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
                   {spread.title}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-4">
+                <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
                   {spread.description}
                 </p>
               </div>
 
-              <div className="w-full pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors">
+              <div className="w-full pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
                 <span>Jogar agora</span>
                 <ArrowLeft className="rotate-180 w-4 h-4" />
               </div>
