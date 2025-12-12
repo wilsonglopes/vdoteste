@@ -34,7 +34,7 @@ const SelectSpread: React.FC = () => {
         
         {/* Header */}
         <div className="flex items-center gap-4 mb-8 pt-4">
-          <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => navigate('/')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <ArrowLeft size={24} />
           </button>
           <div>
@@ -93,3 +93,4 @@ const SelectSpread: React.FC = () => {
 };
 
 export default SelectSpread;
+
