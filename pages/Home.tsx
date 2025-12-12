@@ -37,7 +37,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
           {/* Cards de Navegação */}
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             
-            {/* CARD 1: BARALHO CIGANO (O QUE PRECISA SER CORRIGIDO) */}
+            {/* CARD 1: BARALHO CIGANO (CORRIGIDO PARA NOVA LEITURA) */}
             <div className="group relative bg-[#0f0f12] border border-white/10 hover:border-purple-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(168,85,247,0.15)] flex flex-col items-center text-center">
               <div className="mb-6 p-4 bg-purple-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-500">
                 <Sparkles size={32} className="text-purple-400" />
@@ -47,7 +47,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
                 Tiragens especializadas para Amor, Trabalho e Futuro. Receba orientação clara para o seu momento.
               </p>
               
-              {/* --- AQUI ESTAVA O ERRO: AGORA APONTA PARA /NOVA-LEITURA --- */}
+              {/* O BOTÃO AGORA VAI PARA A SELEÇÃO */}
               <button 
                 onClick={() => navigate('/nova-leitura')} 
                 className="mt-auto px-8 py-3 bg-white/5 hover:bg-purple-600 border border-white/10 hover:border-purple-500 rounded-full text-white font-medium transition-all flex items-center gap-2 group-hover:gap-3"
