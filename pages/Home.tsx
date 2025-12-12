@@ -1,85 +1,86 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Using react-router-dom HashRouter implicitly via App structure
-import { Sparkles, CloudMoon, ScrollText } from 'lucide-react';
-import AuthModal from '../components/AuthModal';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, Moon, ArrowRight, Star } from 'lucide-react';
 
 interface HomeProps {
-  user: any;
+  user?: any;
 }
 
 const Home: React.FC<HomeProps> = ({ user }) => {
   const navigate = useNavigate();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
-  const handleNavigation = (path: string) => {
-    if (!user) {
-      setShowAuthModal(true);
-    } else {
-      navigate(path);
-    }
-  };
 
   return (
-    <>
-      <div className="w-full flex flex-col items-center justify-center min-h-[60vh] gap-12">
-        <div className="text-center space-y-4 animate-fade-in">
-          <p className="text-purple-300/80 uppercase tracking-[0.3em] text-sm font-medium">
-            Autoconhecimento & Espiritualidade
-          </p>
-          <h2 className="font-serif text-4xl md:text-6xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-            Descubra o Oculto
-          </h2>
-          <p className="text-slate-400 max-w-lg mx-auto font-light leading-relaxed">
-            Conecte-se com sua sabedoria interior. Consulte as cartas sagradas ou revele as mensagens escondidas em seus sonhos.
-          </p>
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-purple-500 selection:text-white pb-20">
+      
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-32 px-4 overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
+           <div className="absolute top-20 left-20 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px]" />
+           <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md">
+            <Star size={12} className="text-yellow-400" />
+            <span className="text-xs font-medium tracking-wider uppercase text-slate-300">Autoconhecimento & Espiritualidade</span>
+          </div>
           
-          {/* Tarot Card */}
-          <div className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-30 group-hover:opacity-70 transition duration-500 blur"></div>
-            <div className="relative h-full flex flex-col items-center text-center bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-slate-900/60 transition-all duration-300">
-              <div className="w-16 h-16 mb-6 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <ScrollText className="w-8 h-8 text-purple-300" />
+          <h1 className="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">
+            Descubra o <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Oculto</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+            Conecte-se com sua sabedoria interior. Consulte as cartas sagradas ou revele as mensagens escondidas em seus sonhos.
+          </p>
+
+          {/* Cards de Navegação */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            
+            {/* CARD 1: BARALHO CIGANO (O QUE PRECISA SER CORRIGIDO) */}
+            <div className="group relative bg-[#0f0f12] border border-white/10 hover:border-purple-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(168,85,247,0.15)] flex flex-col items-center text-center">
+              <div className="mb-6 p-4 bg-purple-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-500">
+                <Sparkles size={32} className="text-purple-400" />
               </div>
-              <h3 className="font-serif text-2xl text-white mb-3">Baralho Cigano</h3>
-              <p className="text-slate-400 text-sm mb-8 flex-grow">
-                Tiragem de 9 cartas: Passado, Presente e Futuro. Receba orientação clara para o seu momento atual.
+              <h3 className="text-2xl font-serif text-white mb-3">Baralho Cigano</h3>
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                Tiragens especializadas para Amor, Trabalho e Futuro. Receba orientação clara para o seu momento.
               </p>
+              
+              {/* --- AQUI ESTAVA O ERRO: AGORA APONTA PARA /NOVA-LEITURA --- */}
               <button 
-                onClick={() => handleNavigation('/tarot')}
-                className="px-6 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-all duration-300"
+                onClick={() => navigate('/nova-leitura')} 
+                className="mt-auto px-8 py-3 bg-white/5 hover:bg-purple-600 border border-white/10 hover:border-purple-500 rounded-full text-white font-medium transition-all flex items-center gap-2 group-hover:gap-3"
               >
-                Consultar Cartas
+                Consultar Cartas <ArrowRight size={16} />
               </button>
             </div>
-          </div>
 
-          {/* Dreams Card */}
-          <div className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl opacity-30 group-hover:opacity-70 transition duration-500 blur"></div>
-            <div className="relative h-full flex flex-col items-center text-center bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-slate-900/60 transition-all duration-300">
-              <div className="w-16 h-16 mb-6 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <CloudMoon className="w-8 h-8 text-blue-300" />
+            {/* CARD 2: SONHOS */}
+            <div className="group relative bg-[#0f0f12] border border-white/10 hover:border-blue-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center text-center">
+              <div className="mb-6 p-4 bg-blue-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-500">
+                <Moon size={32} className="text-blue-400" />
               </div>
-              <h3 className="font-serif text-2xl text-white mb-3">Interpretação de Sonhos</h3>
-              <p className="text-slate-400 text-sm mb-8 flex-grow">
+              <h3 className="text-2xl font-serif text-white mb-3">Interpretação de Sonhos</h3>
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                 Desvende os símbolos do seu inconsciente. Escreva seu sonho e receba uma análise profunda.
               </p>
               <button 
-                onClick={() => handleNavigation('/dreams')}
-                className="px-6 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-all duration-300"
+                onClick={() => navigate('/dreams')} 
+                className="mt-auto px-8 py-3 bg-white/5 hover:bg-blue-600 border border-white/10 hover:border-blue-500 rounded-full text-white font-medium transition-all flex items-center gap-2 group-hover:gap-3"
               >
-                Interpretar Sonho
+                Interpretar Sonho <ArrowRight size={16} />
               </button>
             </div>
+
           </div>
         </div>
-      </div>
+      </section>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-    </>
+      <footer className="text-center text-slate-600 text-xs py-8">
+        <p>&copy; 2025 Vozes do Oráculo. Conexão estabelecida.</p>
+      </footer>
+    </div>
   );
 };
 
