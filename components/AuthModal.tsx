@@ -184,7 +184,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                         type="text"
                         required
                         className="w-full bg-slate-950/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50"
-                        placeholder="Seu nome místico"
+                        placeholder="Nome Completo"
                         value={name}
                         onChange={e => setName(e.target.value)}
                       />
@@ -205,7 +205,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                 )}
 
                 <div className="group">
-                  <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1">Email</label>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1">E-mail</label>
                   <input
                     type="email"
                     required
