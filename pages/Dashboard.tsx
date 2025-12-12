@@ -109,7 +109,6 @@ const Dashboard: React.FC = () => {
         isOpen={showPlans} 
         onClose={() => setShowPlans(false)}
         onSelectPlan={(planId) => {
-          // Aqui abriria o checkout real, mas o modal já cuida disso internamente
           setShowPlans(false);
         }}
       />
@@ -155,9 +154,9 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
         
-        {/* --- NOVO: BOTÃO DE AÇÃO PRINCIPAL --- */}
+        {/* --- BOTÃO DE AÇÃO PRINCIPAL (NOVA LEITURA) --- */}
         <div className="bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500/50 p-6 rounded-2xl shadow-2xl relative overflow-hidden flex items-center justify-between group cursor-pointer"
-             onClick={() => navigate('/nova-leitura')}>
+             onClick={() => navigate('/nova-leitura')}> {/* <--- AQUI ESTÁ O LINK CORRETO */}
            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
            
            <div className="relative z-10">
@@ -248,7 +247,7 @@ const Dashboard: React.FC = () => {
               <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400 text-lg mb-6">Seu grimório está vazio.</p>
               <button 
-                onClick={() => navigate('/nova-leitura')} // Agora vai para a seleção de leitura
+                onClick={() => navigate('/nova-leitura')} // <--- CORRIGIDO TAMBÉM
                 className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-full text-base font-bold transition-transform hover:scale-105"
               >
                 Iniciar Jornada
