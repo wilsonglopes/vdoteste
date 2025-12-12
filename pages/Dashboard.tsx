@@ -1,4 +1,3 @@
-// pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
@@ -91,6 +90,12 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  // --- NAVEGAÇÃO SEGURA (DEBUG) ---
+  const handleStartReading = () => {
+    console.log("Clicou em Iniciar Nova Leitura -> indo para /nova-leitura");
+    navigate('/nova-leitura');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0c29] text-purple-200">
@@ -154,13 +159,15 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
         
-        {/* --- BOTÃO DE AÇÃO PRINCIPAL (NOVA LEITURA) --- */}
-        <div className="bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500/50 p-6 rounded-2xl shadow-2xl relative overflow-hidden flex items-center justify-between group cursor-pointer"
-             onClick={() => navigate('/nova-leitura')}> {/* <--- AQUI ESTÁ O LINK CORRETO */}
+        {/* --- BOTÃO DE AÇÃO PRINCIPAL (ATUALIZADO) --- */}
+        <div 
+             className="bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500/50 p-6 rounded-2xl shadow-2xl relative overflow-hidden flex items-center justify-between group cursor-pointer hover:shadow-purple-500/20 transition-all"
+             onClick={handleStartReading}
+        >
            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
            
            <div className="relative z-10">
-             <h2 className="text-2xl lg:text-3xl font-serif font-bold text-white mb-2">Consultar o Oráculo</h2>
+             <h2 className="text-2xl lg:text-3xl font-serif font-bold text-white mb-2">Iniciar Nova Leitura</h2> {/* MUDOU O TEXTO */}
              <p className="text-purple-200 text-sm lg:text-base">Escolha uma tiragem e descubra seu destino agora.</p>
            </div>
 
@@ -170,7 +177,6 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          
           {/* Card de Créditos */}
           <div className="bg-slate-900/60 border border-purple-500/30 p-6 lg:p-8 rounded-2xl shadow-lg relative overflow-hidden group flex flex-col justify-between min-h-[200px]">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -193,7 +199,6 @@ const Dashboard: React.FC = () => {
 
           {/* Card de Perfil */}
           <div className="md:col-span-2 bg-slate-900/60 border border-white/10 p-6 lg:p-8 rounded-2xl shadow-lg relative group flex flex-col justify-center min-h-[200px]">
-            
             <button 
               onClick={() => setShowEditProfile(true)}
               className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-purple-600/20 text-slate-400 hover:text-purple-300 rounded-lg transition-all"
@@ -247,7 +252,7 @@ const Dashboard: React.FC = () => {
               <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400 text-lg mb-6">Seu grimório está vazio.</p>
               <button 
-                onClick={() => navigate('/nova-leitura')} // <--- CORRIGIDO TAMBÉM
+                onClick={handleStartReading} // <--- CORRIGIDO TAMBÉM
                 className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-full text-base font-bold transition-transform hover:scale-105"
               >
                 Iniciar Jornada
