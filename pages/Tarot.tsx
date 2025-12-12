@@ -347,7 +347,6 @@ const Tarot: React.FC = () => {
       )}
 
       {step === 'selection' && (
-        // IMPORTANTE: Passamos o limite para o componente de seleção (mesmo que ele não use visualmente, usamos a lógica aqui)
         <SelectionStep 
           availableCards={availableCards}
           selectedCards={selectedCards}
@@ -357,6 +356,7 @@ const Tarot: React.FC = () => {
           onNext={handleGoToReveal}
           onBack={handleStepBack}
           isMobile={isMobile}
+          maxCards={spreadConfig.cardsCount} // <--- AQUI ESTÁ A CORREÇÃO
         />
       )}
 
