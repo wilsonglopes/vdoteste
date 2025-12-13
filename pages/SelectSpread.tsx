@@ -10,40 +10,24 @@ import { SPREADS } from '../config/spreads';
 const SelectSpread: React.FC = () => {
   const navigate = useNavigate();
 
-  // --- SEGURANÇA: SE A LISTA ESTIVER VAZIA, NÃO QUEBRA O SITE ---
+  // --- SEGURANÇA ---
   if (!SPREADS || !Array.isArray(SPREADS) || SPREADS.length === 0) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center">
-        <p className="text-slate-400">Carregando métodos de leitura...</p>
+      <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white flex flex-col items-center justify-center">
+        <p className="text-slate-400">Carregando...</p>
       </div>
     );
   }
 
-  // --- ROTEAMENTO INTELIGENTE: Manda para a página correta ---
   const handleSelect = (spreadId: string) => {
     switch (spreadId) {
-      case 'ex':
-        navigate('/tarot-ex'); // Vai para TarotEx.tsx (5 cartas)
-        break;
-      case 'vale_pena':
-        navigate('/tarot-vale-pena'); // Vai para TarotValePena.tsx
-        break;
-      case 'mensal':
-        navigate('/tarot-mensal'); // Vai para TarotMensal.tsx
-        break;
-      case 'ferradura':
-        navigate('/tarot-ferradura'); // Vai para TarotFerradura.tsx
-        break;
-      case 'amor_fofoca':
-        navigate('/tarot-fofoca'); // Vai para TarotFofoca.tsx
-        break;
-      case 'ficar_partir':
-        navigate('/tarot-ficar-partir'); // Vai para TarotFicarPartir.tsx
-        break;
-      case 'templo_afrodite':
-      default:
-        navigate('/tarot'); // O padrão continua sendo o de 9 cartas (Tarot.tsx)
-        break;
+      case 'ex': navigate('/tarot-ex'); break;
+      case 'vale_pena': navigate('/tarot-vale-pena'); break;
+      case 'mensal': navigate('/tarot-mensal'); break;
+      case 'ferradura': navigate('/tarot-ferradura'); break;
+      case 'amor_fofoca': navigate('/tarot-fofoca'); break;
+      case 'ficar_partir': navigate('/tarot-ficar-partir'); break;
+      case 'templo_afrodite': default: navigate('/tarot'); break;
     }
   };
 
@@ -61,10 +45,11 @@ const SelectSpread: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-4 pb-20">
+    // AQUI ESTÁ A MUDANÇA: Fundo padronizado (Gradiente Lilás/Roxo)
+    <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header com botão VOLTAR para HOME ('/') */}
+        {/* Header */}
         <div className="flex items-center gap-4 mb-8 pt-4">
           <button onClick={() => navigate('/')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <ArrowLeft size={24} />
@@ -84,9 +69,8 @@ const SelectSpread: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(spread.id)}
-              className="bg-[#121214] border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px]"
+              className="bg-[#121214]/60 border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px] backdrop-blur-sm shadow-lg"
             >
-              {/* Highlight para jogos Premium (muitas cartas) */}
               {spread.cardsCount >= 12 && (
                 <div className="absolute top-0 right-0 bg-pink-900/50 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20">
                   PREMIUM
