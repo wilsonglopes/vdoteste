@@ -2,18 +2,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, Sparkles, Heart, Calendar, HelpCircle, 
-  Eye, RefreshCw, MessageCircle, GitBranch, Anchor 
+  ArrowLeft, Sparkles, Calendar, HelpCircle, 
+  RefreshCw, MessageCircle, GitBranch, Anchor 
 } from 'lucide-react';
 import { SPREADS } from '../config/spreads';
 
 const SelectSpread: React.FC = () => {
   const navigate = useNavigate();
 
-  // Segurança
   if (!SPREADS || !Array.isArray(SPREADS) || SPREADS.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white flex flex-col items-center justify-center">
+      <div className="w-full flex items-center justify-center py-32">
         <p className="text-slate-400">Carregando...</p>
       </div>
     );
@@ -27,7 +26,7 @@ const SelectSpread: React.FC = () => {
       case 'ferradura': navigate('/tarot-ferradura'); break;
       case 'amor_fofoca': navigate('/tarot-fofoca'); break;
       case 'ficar_partir': navigate('/tarot-ficar-partir'); break;
-      case 'templo_afrodite': default: navigate('/tarot'); break;
+      default: navigate('/tarot'); break;
     }
   };
 
@@ -45,15 +44,16 @@ const SelectSpread: React.FC = () => {
   };
 
   return (
-    // 1. Fundo Geral da Página (Gradiente Estrelado)
-    <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20 overflow-x-hidden">
-      
-      {/* 2. Container Centralizado - SEM COR DE FUNDO (Transparente) */}
-      <div className="max-w-6xl mx-auto">
-        
+    <>
+      {/* Wrapper SEM background */}
+      <div className="w-full flex flex-col items-center px-4 pb-24">
+
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8 pt-4">
-          <button onClick={() => navigate('/')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+        <div className="w-full max-w-6xl flex items-center gap-4 mb-10 pt-6">
+          <button
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+          >
             <ArrowLeft size={24} />
           </button>
           <div>
@@ -62,20 +62,19 @@ const SelectSpread: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid de Opções */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
           {SPREADS.map((spread, index) => (
             <motion.div
               key={spread.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.08 }}
               onClick={() => handleSelect(spread.id)}
-              // 3. CARDS INDIVIDUAIS: Aqui sim tem cor (bg-slate-900/80) igual à Home
-              className="relative bg-slate-900/80 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-slate-800/90 transition-all group overflow-hidden flex flex-col justify-between h-full min-h-[180px] shadow-lg backdrop-blur-xl"
+              className="relative bg-slate-900/80 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-slate-800/90 transition-all group overflow-hidden flex flex-col justify-between min-h-[190px] backdrop-blur-xl"
             >
-              {/* Efeito Glow Interno no Hover */}
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-20 transition duration-500 blur"></div>
+              {/* Glow */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-20 transition duration-500 blur" />
 
               {spread.cardsCount >= 12 && (
                 <div className="absolute top-0 right-0 bg-pink-900/80 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20 z-10">
@@ -96,12 +95,13 @@ const SelectSpread: React.FC = () => {
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
                   {spread.title}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
+
+                <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">
                   {spread.description}
                 </p>
               </div>
 
-              <div className="relative z-10 w-full pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
+              <div className="relative z-10 w-full pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-4">
                 <span>Jogar agora</span>
                 <ArrowLeft className="rotate-180 w-4 h-4" />
               </div>
@@ -110,7 +110,7 @@ const SelectSpread: React.FC = () => {
         </div>
 
       </div>
-    </div>
+    </>
   );
 };
 
