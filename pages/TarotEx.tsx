@@ -157,7 +157,18 @@ const TarotEx: React.FC = () => {
          <div className="text-right"><h2 className="text-purple-300 font-serif text-lg">Tirada do Ex</h2><span className="text-[10px] text-slate-500 uppercase">5 Cartas</span></div>
       </div>
 
-      {step === 'question' && <QuestionStep question={question} setQuestion={setQuestion} onNext={() => setStep('selection')} onBack={() => navigate('/nova-leitura')} />}
+      {step === 'question' && (
+        <QuestionStep 
+          question={question} 
+          setQuestion={setQuestion} 
+          onNext={() => setStep('selection')} 
+          onBack={() => navigate('/nova-leitura')}
+          
+          // --- PERSONALIZAÇÃO AQUI ---
+          customTitle="O que você quer saber sobre seu Ex?"
+          customPlaceholder="Ex: Ele ainda pensa em mim? Existe chance de volta? O que ele sente hoje?"
+        />
+      )}
       
       {step === 'selection' && (
         <SelectionStep 
