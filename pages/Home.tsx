@@ -87,10 +87,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 
         </div>
       </div>
-
-      <footer className="text-center text-slate-500 text-xs py-6">
-        <p>&copy; 2025 Vozes do Oráculo. Conexão estabelecida.</p>
-      </footer>
+      
     </>
   );
 };
