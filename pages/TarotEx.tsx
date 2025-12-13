@@ -158,7 +158,7 @@ const TarotEx: React.FC = () => {
       </div>
 
       {step === 'question' && (
-        <QuestionStep 
+        <QuestionStepEx 
           question={question} 
           setQuestion={setQuestion} 
           onNext={() => setStep('selection')} 
