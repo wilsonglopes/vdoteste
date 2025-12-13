@@ -265,10 +265,14 @@ const Tarot: React.FC = () => {
 
       {step === 'question' && (
         <QuestionStep 
-          question={question}
-          setQuestion={setQuestion}
-          onNext={() => setStep('selection')}
-          onBack={handleStepBack}
+          question={question} 
+          setQuestion={setQuestion} 
+          onNext={() => setStep('selection')} 
+          onBack={() => navigate('/nova-leitura')}
+          
+          // --- PERSONALIZAÇÃO AQUI ---
+          customTitle="O que esperar do próximo mês?"
+          customPlaceholder="Ex: Como será minha vida financeira? O que esperar no amor nos próximos 30 dias?"
         />
       )}
 
@@ -303,5 +307,6 @@ const Tarot: React.FC = () => {
     </div>
   );
 };
+
 
 export default Tarot;
