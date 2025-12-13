@@ -13,7 +13,7 @@ import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
 // Componentes das Etapas
-import QuestionStep from '../components/tarot/QuestionStep';
+import QuestionStep from '../components/tarot/QuestionStepMensal';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
 
@@ -264,7 +264,7 @@ const Tarot: React.FC = () => {
       />
 
       {step === 'question' && (
-        <QuestionStep 
+        <QuestionStepMensal 
           question={question} 
           setQuestion={setQuestion} 
           onNext={() => setStep('selection')} 
@@ -310,3 +310,4 @@ const Tarot: React.FC = () => {
 
 
 export default Tarot;
+
