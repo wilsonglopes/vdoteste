@@ -11,13 +11,15 @@ import { consumeCredit } from '../services/userService';
 // Componentes
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
-// Importe o QuestionStepEx se você criou, ou use o QuestionStep padrão com props personalizadas
+
+// --- IMPORTANTE: Usando o componente específico do EX ---
 import QuestionStepEx from '../components/tarot/QuestionStepEx'; 
+
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
-import { Sparkles, Send, Loader2 } from 'lucide-react'; // Removi ArrowLeft pois não usaremos no topo
+import { Sparkles, Send, Loader2 } from 'lucide-react';
 
 const LOCAL_KEY = 'vozes_tarot_ex_state';
-const MAX_CARDS = 5; 
+const MAX_CARDS = 5; // Limite de 5 cartas
 
 const TarotEx: React.FC = () => {
   const navigate = useNavigate();
@@ -148,8 +150,7 @@ const TarotEx: React.FC = () => {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
       <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} onSelectPlan={() => setShowPlans(false)} />
 
-      {/* REMOVIDO O HEADER COM BOTÃO VOLTAR DO TOPO */}
-      {/* O botão voltar agora existe apenas dentro dos componentes QuestionStep e SelectionStep (no rodapé) */}
+      {/* HEADER REMOVIDO CONFORME PEDIDO */}
 
       {step === 'question' && (
         <QuestionStepEx 
@@ -167,11 +168,11 @@ const TarotEx: React.FC = () => {
           hoveredCardId={hoveredCardId}
           setHoveredCardId={setHoveredCardId}
           onCardSelect={handleCardSelect}
-          // Quando clicar em "Ver Mesa", vai para o reveal
+          // Ao completar 5 cartas, o botão "Ver Mesa" aparece (controlado pelo SelectionStep)
           onNext={() => { setRevealedLocal(0); setStep('reveal'); }} 
           onBack={() => setStep('question')}
           isMobile={isMobile}
-          maxCards={MAX_CARDS} // 5 Slots
+          maxCards={MAX_CARDS} // 5
         />
       )}
 
