@@ -45,10 +45,10 @@ const SelectSpread: React.FC = () => {
   };
 
   return (
-    // Fundo Principal (Estrelado)
+    // 1. Fundo Geral da Página (Gradiente Estrelado)
     <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20 overflow-x-hidden">
       
-      {/* CORREÇÃO AQUI: Removi qualquer bg-color deste container. Ele agora é invisível. */}
+      {/* 2. Container Centralizado - SEM COR DE FUNDO (Transparente) */}
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}
@@ -71,11 +71,10 @@ const SelectSpread: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(spread.id)}
-              // ESTILO DOS CARDS INDIVIDUAIS (Esses sim têm cor escura)
-              // Usei o mesmo estilo da Home que você gostou (slate-900/80)
-              className="relative bg-slate-900/80 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group overflow-hidden flex flex-col justify-between h-full min-h-[180px] shadow-lg backdrop-blur-xl"
+              // 3. CARDS INDIVIDUAIS: Aqui sim tem cor (bg-slate-900/80) igual à Home
+              className="relative bg-slate-900/80 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-slate-800/90 transition-all group overflow-hidden flex flex-col justify-between h-full min-h-[180px] shadow-lg backdrop-blur-xl"
             >
-              {/* Efeito de brilho interno sutil no hover */}
+              {/* Efeito Glow Interno no Hover */}
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-20 transition duration-500 blur"></div>
 
               {spread.cardsCount >= 12 && (
