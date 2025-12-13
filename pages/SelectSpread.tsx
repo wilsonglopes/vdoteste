@@ -45,7 +45,7 @@ const SelectSpread: React.FC = () => {
   };
 
   return (
-    // AQUI ESTÁ A MUDANÇA: Fundo padronizado (Gradiente Lilás/Roxo)
+    // Fundo Gradiente Principal (Lilás/Roxo Espacial)
     <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20">
       <div className="max-w-6xl mx-auto">
         
@@ -69,7 +69,8 @@ const SelectSpread: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(spread.id)}
-              className="bg-[#121214]/60 border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px] backdrop-blur-sm shadow-lg"
+              // AQUI ESTÁ A MUDANÇA: bg-white/5 (quase transparente) + backdrop-blur
+              className="bg-white/5 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/10 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px] backdrop-blur-sm"
             >
               {spread.cardsCount >= 12 && (
                 <div className="absolute top-0 right-0 bg-pink-900/50 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20">
@@ -82,7 +83,7 @@ const SelectSpread: React.FC = () => {
                   <div className="p-3 bg-white/5 rounded-xl group-hover:scale-110 transition-transform duration-300 border border-white/5">
                     {getIcon(spread.id)}
                   </div>
-                  <span className="text-xs font-mono text-slate-500 bg-black/40 px-2 py-1 rounded border border-white/5">
+                  <span className="text-xs font-mono text-slate-400 bg-black/20 px-2 py-1 rounded border border-white/5">
                     {spread.cardsCount} Cartas
                   </span>
                 </div>
@@ -90,12 +91,12 @@ const SelectSpread: React.FC = () => {
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
                   {spread.title}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
+                <p className="text-slate-300 text-sm leading-relaxed mb-4 line-clamp-3">
                   {spread.description}
                 </p>
               </div>
 
-              <div className="w-full pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
+              <div className="w-full pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-400 group-hover:text-purple-300 transition-colors mt-auto">
                 <span>Jogar agora</span>
                 <ArrowLeft className="rotate-180 w-4 h-4" />
               </div>
