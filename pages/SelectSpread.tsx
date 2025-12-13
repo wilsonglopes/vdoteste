@@ -10,6 +10,7 @@ import { SPREADS } from '../config/spreads';
 const SelectSpread: React.FC = () => {
   const navigate = useNavigate();
 
+  // Segurança
   if (!SPREADS || !Array.isArray(SPREADS) || SPREADS.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white flex flex-col items-center justify-center">
@@ -44,8 +45,10 @@ const SelectSpread: React.FC = () => {
   };
 
   return (
-    // Fundo Gradiente Principal (Igual ao Tarot)
+    // Fundo Principal (Estrelado)
     <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20 overflow-x-hidden">
+      
+      {/* CORREÇÃO AQUI: Removi qualquer bg-color deste container. Ele agora é invisível. */}
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}
@@ -59,7 +62,7 @@ const SelectSpread: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid de Opções - Cards com Fundo Escuro para Leitura */}
+        {/* Grid de Opções */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {SPREADS.map((spread, index) => (
             <motion.div
@@ -68,16 +71,20 @@ const SelectSpread: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(spread.id)}
-              // AQUI: Devolvi o fundo escuro (bg-[#121214]) para ter contraste
-              className="bg-[#121214] border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-[#1a1a1d] transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px] shadow-lg"
+              // ESTILO DOS CARDS INDIVIDUAIS (Esses sim têm cor escura)
+              // Usei o mesmo estilo da Home que você gostou (slate-900/80)
+              className="relative bg-slate-900/80 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group overflow-hidden flex flex-col justify-between h-full min-h-[180px] shadow-lg backdrop-blur-xl"
             >
+              {/* Efeito de brilho interno sutil no hover */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-20 transition duration-500 blur"></div>
+
               {spread.cardsCount >= 12 && (
-                <div className="absolute top-0 right-0 bg-pink-900/50 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20">
+                <div className="absolute top-0 right-0 bg-pink-900/80 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20 z-10">
                   PREMIUM
                 </div>
               )}
 
-              <div>
+              <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
                   <div className="p-3 bg-white/5 rounded-xl border border-white/5 group-hover:scale-110 transition-transform duration-300">
                     {getIcon(spread.id)}
@@ -95,7 +102,7 @@ const SelectSpread: React.FC = () => {
                 </p>
               </div>
 
-              <div className="w-full pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
+              <div className="relative z-10 w-full pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
                 <span>Jogar agora</span>
                 <ArrowLeft className="rotate-180 w-4 h-4" />
               </div>
