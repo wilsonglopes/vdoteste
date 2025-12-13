@@ -11,7 +11,7 @@ import { consumeCredit } from '../services/userService';
 // Componentes
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
-import QuestionStep from '../components/tarot/QuestionStep';
+import QuestionStep from '../components/tarot/QuestionStepEx';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import { ArrowLeft, Sparkles, Send, Loader2 } from 'lucide-react';
 
