@@ -11,9 +11,10 @@ import { consumeCredit } from '../services/userService';
 // Componentes
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
-import QuestionStep from '../components/tarot/QuestionStepEx';
+// Importe o QuestionStepEx se você criou, ou use o QuestionStep padrão com props personalizadas
+import QuestionStepEx from '../components/tarot/QuestionStepEx'; 
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
-import { ArrowLeft, Sparkles, Send, Loader2 } from 'lucide-react';
+import { Sparkles, Send, Loader2 } from 'lucide-react'; // Removi ArrowLeft pois não usaremos no topo
 
 const LOCAL_KEY = 'vozes_tarot_ex_state';
 const MAX_CARDS = 5; 
@@ -62,7 +63,7 @@ const TarotEx: React.FC = () => {
     return () => { mountedRef.current = false; window.removeEventListener('resize', checkMobile); };
   }, []); 
 
-  // --- SELEÇÃO CORRIGIDA (SEM AUTO-NAV) ---
+  // --- SELEÇÃO ---
   const handleCardSelect = (card: CardData) => {
     if (selectedCards.length >= MAX_CARDS) return;
     if (selectedCards.find(c => c.id === card.id)) return;
@@ -70,9 +71,6 @@ const TarotEx: React.FC = () => {
     const newSelection = [...selectedCards, card];
     setSelectedCards(newSelection);
     setAvailableCards(deck.filter(c => !newSelection.find(s => s.id === c.id)));
-
-    // REMOVIDO: O setTimeout que ia para 'reveal' automaticamente.
-    // Agora o usuário clica em "Ver Mesa" no componente SelectionStep.
   };
 
   // --- REVELAÇÃO ---
@@ -104,7 +102,7 @@ const TarotEx: React.FC = () => {
     } catch (err) { alert("Erro na conexão."); } finally { setLoadingAI(false); }
   };
 
-  // --- LAYOUT DA MESA (VISUAL CORRIGIDO DO VERSO) ---
+  // --- LAYOUT DA MESA (Boneco) ---
   const renderExLayout = () => {
     const renderSlot = (index: number) => {
         const card = selectedCards[index];
@@ -120,7 +118,6 @@ const TarotEx: React.FC = () => {
             
             <div className="w-full h-full relative">
                 {!isRevealed ? (
-                    // --- VERSO DA CARTA (IDÊNTICO AO LEQUE) ---
                     <div className="w-full h-full rounded-lg bg-gradient-to-br from-indigo-950 to-purple-900 border border-purple-500/30 shadow-lg relative overflow-hidden">
                         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
                         <div className="absolute inset-1 border border-white/10 rounded-md" />
@@ -129,7 +126,6 @@ const TarotEx: React.FC = () => {
                         </div>
                     </div>
                 ) : (
-                    // FRENTE DA CARTA
                     <img src={card.imageUrl} className="w-full h-full object-cover rounded-lg border border-white/20 shadow-xl" />
                 )}
             </div>
@@ -152,10 +148,8 @@ const TarotEx: React.FC = () => {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
       <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} onSelectPlan={() => setShowPlans(false)} />
 
-      <div className="w-full flex justify-between items-center mb-4">
-         <button onClick={() => navigate('/nova-leitura')} className="flex items-center text-slate-400 hover:text-white gap-2 text-sm font-bold"><ArrowLeft size={18} /> Voltar</button>
-         <div className="text-right"><h2 className="text-purple-300 font-serif text-lg">Tirada do Ex</h2><span className="text-[10px] text-slate-500 uppercase">5 Cartas</span></div>
-      </div>
+      {/* REMOVIDO O HEADER COM BOTÃO VOLTAR DO TOPO */}
+      {/* O botão voltar agora existe apenas dentro dos componentes QuestionStep e SelectionStep (no rodapé) */}
 
       {step === 'question' && (
         <QuestionStepEx 
@@ -163,10 +157,6 @@ const TarotEx: React.FC = () => {
           setQuestion={setQuestion} 
           onNext={() => setStep('selection')} 
           onBack={() => navigate('/nova-leitura')}
-          
-          // --- PERSONALIZAÇÃO AQUI ---
-          customTitle="O que você quer saber sobre seu Ex?"
-          customPlaceholder="Ex: Ele ainda pensa em mim? Existe chance de volta? O que ele sente hoje?"
         />
       )}
       
@@ -177,11 +167,11 @@ const TarotEx: React.FC = () => {
           hoveredCardId={hoveredCardId}
           setHoveredCardId={setHoveredCardId}
           onCardSelect={handleCardSelect}
-          // AQUI O BOTÃO DO COMPONENTE VAI CHAMAR ESSA FUNÇÃO
+          // Quando clicar em "Ver Mesa", vai para o reveal
           onNext={() => { setRevealedLocal(0); setStep('reveal'); }} 
           onBack={() => setStep('question')}
           isMobile={isMobile}
-          maxCards={MAX_CARDS} // Agora com 5 slots!
+          maxCards={MAX_CARDS} // 5 Slots
         />
       )}
 
