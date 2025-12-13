@@ -10,15 +10,13 @@ const Home: React.FC<HomeProps> = ({ user }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-purple-500 selection:text-white pb-20">
+    // AQUI ESTÁ A MUDANÇA: Fundo padronizado com o gradiente lilás/roxo
+    <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-sans selection:bg-purple-500 selection:text-white pb-20">
       
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 px-4 overflow-hidden">
-        {/* Efeitos de Fundo */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
-           <div className="absolute top-20 left-20 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px]" />
-           <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]" />
-        </div>
+        
+        {/* (Removi as div de blur manuais para ficar limpo igual a tela de Tarot) */}
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md">
@@ -37,8 +35,8 @@ const Home: React.FC<HomeProps> = ({ user }) => {
           {/* Cards de Navegação */}
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             
-            {/* CARD 1: BARALHO CIGANO (CORRIGIDO) */}
-            <div className="group relative bg-[#0f0f12] border border-white/10 hover:border-purple-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(168,85,247,0.15)] flex flex-col items-center text-center">
+            {/* CARD 1: BARALHO CIGANO */}
+            <div className="group relative bg-[#0f0f12]/60 border border-white/10 hover:border-purple-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(168,85,247,0.15)] flex flex-col items-center text-center backdrop-blur-sm">
               <div className="mb-6 p-4 bg-purple-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-500">
                 <Sparkles size={32} className="text-purple-400" />
               </div>
@@ -47,7 +45,6 @@ const Home: React.FC<HomeProps> = ({ user }) => {
                 Tiragens especializadas para Amor, Trabalho e Futuro. Receba orientação clara para o seu momento.
               </p>
               
-              {/* --- AQUI ESTAVA O ERRO: AGORA VAI PARA A SELEÇÃO --- */}
               <button 
                 onClick={() => navigate('/nova-leitura')} 
                 className="mt-auto px-8 py-3 bg-white/5 hover:bg-purple-600 border border-white/10 hover:border-purple-500 rounded-full text-white font-medium transition-all flex items-center gap-2 group-hover:gap-3"
@@ -57,7 +54,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
             </div>
 
             {/* CARD 2: SONHOS */}
-            <div className="group relative bg-[#0f0f12] border border-white/10 hover:border-blue-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center text-center">
+            <div className="group relative bg-[#0f0f12]/60 border border-white/10 hover:border-blue-500/50 rounded-3xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center text-center backdrop-blur-sm">
               <div className="mb-6 p-4 bg-blue-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-500">
                 <Moon size={32} className="text-blue-400" />
               </div>
