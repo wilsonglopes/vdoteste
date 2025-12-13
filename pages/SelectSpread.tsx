@@ -10,7 +10,6 @@ import { SPREADS } from '../config/spreads';
 const SelectSpread: React.FC = () => {
   const navigate = useNavigate();
 
-  // --- SEGURANÇA ---
   if (!SPREADS || !Array.isArray(SPREADS) || SPREADS.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white flex flex-col items-center justify-center">
@@ -45,8 +44,8 @@ const SelectSpread: React.FC = () => {
   };
 
   return (
-    // Fundo Gradiente Principal (Lilás/Roxo Espacial)
-    <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20">
+    // Fundo do App (Gradiente Espacial) - Igual ao Tarot
+    <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-4 pb-20 overflow-x-hidden">
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}
@@ -61,7 +60,7 @@ const SelectSpread: React.FC = () => {
         </div>
 
         {/* Grid de Opções */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {SPREADS.map((spread, index) => (
             <motion.div
               key={spread.id}
@@ -69,18 +68,22 @@ const SelectSpread: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(spread.id)}
-              // AQUI ESTÁ A MUDANÇA: bg-white/5 (quase transparente) + backdrop-blur
-              className="bg-white/5 border border-white/10 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/10 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px] backdrop-blur-sm"
+              // AQUI ESTÁ A CORREÇÃO: Removi todas as cores de fundo.
+              // Apenas 'border-white/10' para dar um contorno sutil, ou remova se quiser 100% limpo.
+              className="relative p-6 rounded-2xl cursor-pointer border border-white/10 hover:border-purple-500/50 transition-all group flex flex-col justify-between h-full min-h-[180px] hover:bg-white/5"
             >
+              {/* Brilho hover suave */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
+
               {spread.cardsCount >= 12 && (
                 <div className="absolute top-0 right-0 bg-pink-900/50 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20">
                   PREMIUM
                 </div>
               )}
 
-              <div>
+              <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-white/5 rounded-xl group-hover:scale-110 transition-transform duration-300 border border-white/5">
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 group-hover:scale-110 transition-transform duration-300">
                     {getIcon(spread.id)}
                   </div>
                   <span className="text-xs font-mono text-slate-400 bg-black/20 px-2 py-1 rounded border border-white/5">
@@ -91,12 +94,12 @@ const SelectSpread: React.FC = () => {
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
                   {spread.title}
                 </h3>
-                <p className="text-slate-300 text-sm leading-relaxed mb-4 line-clamp-3">
+                <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
                   {spread.description}
                 </p>
               </div>
 
-              <div className="w-full pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-400 group-hover:text-purple-300 transition-colors mt-auto">
+              <div className="relative z-10 w-full pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
                 <span>Jogar agora</span>
                 <ArrowLeft className="rotate-180 w-4 h-4" />
               </div>
