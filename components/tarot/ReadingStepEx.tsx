@@ -79,7 +79,7 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
       case 3: // Carta 4: Base Esquerda
         return "col-start-1 row-start-3 justify-self-end";
       case 4: // Carta 5: Base Direita (Inclinada/Diagonal)
-        return "col-start-2 row-start-3 justify-self-start -rotate-[-30deg] translate-y-4 -translate-x-1";
+        return "col-start-2 row-start-3 justify-self-start -rotate-[-30deg] translate-y-4 -translate-x-8";
       default:
         return "";
     }
