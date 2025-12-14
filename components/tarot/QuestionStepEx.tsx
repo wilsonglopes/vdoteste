@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { HeartCrack, ArrowRight } from 'lucide-react'; // Ícone específico
+import { HeartCrack, ArrowRight, ArrowLeft } from 'lucide-react'; // Adicionado ArrowLeft
 
 interface QuestionStepProps {
   question: string;
@@ -11,7 +11,7 @@ interface QuestionStepProps {
 
 const QuestionStepEx: React.FC<QuestionStepProps> = ({ question, setQuestion, onNext, onBack }) => {
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-[60vh] px-4">
+    <div className="flex flex-col items-center justify-center w-full min-h-[70vh] px-4">
       
       {/* Ícone Específico para EX */}
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mb-6 text-red-400">
@@ -35,6 +35,7 @@ const QuestionStepEx: React.FC<QuestionStepProps> = ({ question, setQuestion, on
         <div className="absolute bottom-4 right-4 text-xs text-slate-500">{question.length} caracteres</div>
       </div>
 
+      {/* Botão Principal */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -44,6 +45,17 @@ const QuestionStepEx: React.FC<QuestionStepProps> = ({ question, setQuestion, on
       >
         Consultar Cartas <ArrowRight size={20} />
       </motion.button>
+
+      {/* NOVO BOTÃO VOLTAR (ADICIONADO) */}
+      <div className="w-full max-w-lg flex justify-end mt-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full border border-white/10"
+        >
+          <ArrowLeft size={16} /> Voltar
+        </button>
+      </div>
+
     </div>
   );
 };
