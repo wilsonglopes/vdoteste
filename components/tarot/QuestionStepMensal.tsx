@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarRange, ArrowRight } from 'lucide-react'; // Ícone específico
+import { Calendar, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface QuestionStepProps {
   question: string;
@@ -11,26 +11,25 @@ interface QuestionStepProps {
 
 const QuestionStepMensal: React.FC<QuestionStepProps> = ({ question, setQuestion, onNext, onBack }) => {
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-[60vh] px-4">
+    <div className="flex flex-col items-center justify-center w-full min-h-[70vh] px-4">
       
-      {/* Ícone Específico para MENSAL */}
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mb-6 text-blue-400">
-        <CalendarRange size={64} />
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mb-6 text-cyan-400">
+        <Calendar size={64} />
       </motion.div>
 
       <h2 className="text-3xl md:text-4xl font-serif text-white mb-2 text-center drop-shadow-lg">
-        Previsão Mensal
+        Método Mensal
       </h2>
       <p className="text-slate-400 text-sm mb-8 text-center max-w-md">
-        Visualize os próximos 30 dias. Qual área da sua vida precisa de mais clareza?
+        Uma previsão completa das energias, desafios e oportunidades para o seu próximo mês.
       </p>
 
       <div className="w-full max-w-lg relative">
         <textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ex: Como será minha vida financeira este mês? O que esperar no amor?"
-          className="w-full h-40 bg-white/5 border border-white/10 rounded-2xl p-6 text-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all resize-none shadow-xl backdrop-blur-sm"
+          placeholder="Ex: O que o próximo mês me reserva? Como será minha vida financeira e amorosa este mês?"
+          className="w-full h-40 bg-white/5 border border-white/10 rounded-2xl p-6 text-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all resize-none shadow-xl backdrop-blur-sm"
         />
         <div className="absolute bottom-4 right-4 text-xs text-slate-500">{question.length} caracteres</div>
       </div>
@@ -40,10 +39,20 @@ const QuestionStepMensal: React.FC<QuestionStepProps> = ({ question, setQuestion
         whileTap={{ scale: 0.95 }}
         onClick={onNext}
         disabled={!question.trim()}
-        className="mt-8 px-10 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-full text-white font-bold text-lg shadow-lg shadow-blue-900/20 transition-all flex items-center gap-2"
+        className="mt-8 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-full text-white font-bold text-lg shadow-lg shadow-cyan-900/20 transition-all flex items-center gap-2"
       >
-        Ver Previsão <ArrowRight size={20} />
+        Consultar Cartas <ArrowRight size={20} />
       </motion.button>
+
+      <div className="w-full max-w-lg flex justify-end mt-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full border border-white/10"
+        >
+          <ArrowLeft size={16} /> Voltar
+        </button>
+      </div>
+
     </div>
   );
 };
