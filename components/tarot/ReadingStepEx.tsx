@@ -69,13 +69,13 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
       case 1: // Carta 2: Topo Direita
         return "col-start-2 justify-self-start";
       case 2: // Carta 3: Centro (Deitada/Horizontal)
-        // rotate-90 para deitar, scale-90 para ajustar o tamanho visual
-        return "col-span-2 row-start-2 justify-self-center rotate-90 z-10 my-6 scale-90";
+        // Alterado my-6 para my-2 para aproximar verticalmente
+        return "col-span-2 row-start-2 justify-self-center rotate-90 z-10 my-2 scale-90";
       case 3: // Carta 4: Base Esquerda
         return "col-start-1 row-start-3 justify-self-end";
       case 4: // Carta 5: Base Direita (Inclinada/Diagonal)
-        // rotate-45 para dar o efeito "caído" da imagem
-        return "col-start-2 row-start-3 justify-self-start rotate-[30deg] translate-y-4 translate-x-2";
+        // Alterado para -rotate-[30deg] (inclina para a esquerda)
+        return "col-start-2 row-start-3 justify-self-start -rotate-[30deg] translate-y-4 -translate-x-2";
       default:
         return "";
     }
@@ -92,8 +92,8 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
         </div>
 
         {/* --- LAYOUT ESPECÍFICO DA TIRADA DO EX (GRID) --- */}
-        {/* Grid de 2 colunas para posicionar 1-2 e 4-5, com a 3 centralizada */}
-        <div className="grid grid-cols-2 gap-x-8 gap-y-2 max-w-md mx-auto mb-12 w-full relative perspective-1000 py-4">
+        {/* Alterado gap-x-8 para gap-x-2 (mais próximas horizontalmente) */}
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1 max-w-md mx-auto mb-12 w-full relative perspective-1000 py-4">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
             const customClass = getCardStyle(index);
@@ -106,7 +106,7 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
 
             return (
               <div key={card.id} className={`w-24 md:w-28 aspect-[2/3] relative group ${customClass}`}>
-                {/* Números indicadores de posição (opcional, para guiar igual à imagem) */}
+                {/* Números indicadores de posição */}
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white/30 font-serif text-sm font-bold">
                     {index + 1}
                 </div>
@@ -126,7 +126,7 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
           })}
         </div>
 
-        {/* ÁREA DE RESULTADO (Lógica mantida idêntica) */}
+        {/* ÁREA DE RESULTADO */}
         {revealedLocal === totalCards && (
           <div className="w-full animate-fade-in-up space-y-8 pb-8">
             {isLoadingAI || !reading ? (
