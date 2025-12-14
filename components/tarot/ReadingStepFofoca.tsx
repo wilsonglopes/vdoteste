@@ -69,10 +69,10 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
           <p className="text-slate-400 italic text-lg md:text-xl">"{question}"</p>
         </div>
 
-        {/* --- GRID DE 12 CARTAS (REF: image_513585.jpg) --- */}
-        {/* Mobile: 3 colunas (gap-2) | Desktop: 4 colunas (gap-3) */}
-        {/* max-w-4xl para garantir que caiba bem na tela sem ficar gigante */}
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3 max-w-4xl mx-auto mb-12 w-full relative perspective-1000 py-4 justify-items-center">
+        {/* --- GRID DE 12 CARTAS --- */}
+        {/* Ajustado para ser mais compacto (max-w-3xl e gap-2) */}
+        {/* Mobile: 3 colunas x 4 linhas | Desktop: 4 colunas x 3 linhas (Igual imagem) */}
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-w-3xl mx-auto mb-10 w-full relative perspective-1000 py-4 justify-items-center">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
             
@@ -83,20 +83,20 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
             };
 
             return (
-              <div key={card.id} className="w-20 md:w-28 aspect-[2/3] relative group">
+              <div key={card.id} className="w-20 md:w-24 aspect-[2/3] relative group">
                 
-                {/* Número Indicador Pequeno acima da carta */}
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-white/40 font-serif text-xs font-bold">
+                {/* Número da carta acima (como na imagem de referência) */}
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-pink-300/50 font-serif text-xs font-bold">
                     {index + 1}
                 </div>
 
                 <div className="w-full h-full relative transition-transform" style={transformStyle}>
-                  {/* VERSO - Borda Rosa Fina */}
-                  <div className="absolute inset-0 w-full h-full rounded-lg border border-pink-500/40 bg-indigo-950 overflow-hidden shadow-md" style={{ backfaceVisibility: 'hidden' as const }}>
+                  {/* VERSO */}
+                  <div className="absolute inset-0 w-full h-full rounded-lg border border-pink-500/30 bg-indigo-950 overflow-hidden shadow-md" style={{ backfaceVisibility: 'hidden' as const }}>
                     <img src={CARD_BACK_URL} className="w-full h-full object-cover opacity-90" alt="verso" />
                   </div>
-                  {/* FRENTE - Borda Rosa Mais Forte */}
-                  <div className="absolute inset-0 w-full h-full rounded-lg border border-pink-500 overflow-hidden shadow-[0_0_15px_rgba(236,72,153,0.3)] bg-black" style={{ backfaceVisibility: 'hidden' as const, transform: 'rotateY(180deg)' }}>
+                  {/* FRENTE */}
+                  <div className="absolute inset-0 w-full h-full rounded-lg border-2 border-pink-500 overflow-hidden shadow-[0_0_15px_rgba(236,72,153,0.3)] bg-black" style={{ backfaceVisibility: 'hidden' as const, transform: 'rotateY(180deg)' }}>
                     <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
                   </div>
                 </div>
@@ -122,7 +122,7 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
                 <div>
                   <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-pink-400" /> O que foi revelado</h3>
                   
-                  {/* Grid de significados (2 colunas em telas médias para não ficar linguiça) */}
+                  {/* Grid de significados em 2 colunas para ficar organizado */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {reading.individual_cards?.map((item: any, idx: number) => (
                       <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-pink-500/30 transition-colors">
@@ -154,7 +154,7 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
         )}
       </div>
 
-      {/* BOTÃO REVELAR (SÓ APARECE NO INÍCIO) */}
+      {/* BOTÃO REVELAR */}
       {revealedLocal === 0 && (
         <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
           <button
