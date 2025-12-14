@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 
 export interface CardData {
   id: number;
@@ -16,7 +17,7 @@ interface SelectionStepExProps {
   onNext: () => void;
   onBack: () => void;
   isMobile: boolean;
-  limit: number; // RECEBE 5, 7, ou 9
+  limit: number; // Define quantos slots aparecem (ex: 5)
 }
 
 const SelectionStepEx: React.FC<SelectionStepExProps> = ({
@@ -28,51 +29,77 @@ const SelectionStepEx: React.FC<SelectionStepExProps> = ({
   onNext,
   onBack,
   isMobile,
-  limit // Quantidade exata de slots
+  limit
 }) => {
   
-  // Verifica se completou a seleção para mostrar o botão
+  // Verifica se o usuário já escolheu o número exato de cartas
   const isComplete = selectedCards.length === limit;
 
-  // Renderiza o Leque de Cartas (Lógica visual simplificada para focar na funcionalidade)
+  // --- LÓGICA DO LEQUE (VISUAL FIXO) ---
   const renderFan = () => {
-    // Se quiser usar exatamente o mesmo leque do original, 
-    // copie a lógica de angulação do seu SelectionStep.tsx aqui.
-    // Abaixo está uma versão funcional padrão:
+    // Configurações visuais para manter o leque idêntico ao original
     const totalCards = availableCards.length;
-    const angleStep = isMobile ? 4 : 2.5; 
-    const startAngle = -((totalCards - 1) * angleStep) / 2;
+    
+    // Ajuste fino para o arco parecer com a imagem enviada (denso e curvado)
+    const arcAngle = isMobile ? 80 : 100; // Abertura total do leque em graus
+    const startAngle = -arcAngle / 2;
+    const angleStep = arcAngle / (totalCards - 1);
+    
+    // Raio do arco (distância do ponto de rotação)
+    const radius = isMobile ? 300 : 500; 
 
     return (
-      <div className="relative w-full h-[300px] md:h-[400px] flex justify-center items-end mb-8 overflow-visible">
+      <div 
+        className="relative w-full flex justify-center items-end overflow-hidden"
+        style={{ height: isMobile ? '320px' : '450px' }} // Altura fixa para o container do leque
+      >
         {availableCards.map((card, index) => {
           const angle = startAngle + index * angleStep;
-          // Eleva a carta se estiver em hover
           const isHovered = hoveredCardId === card.id;
+          
+          // Cálculo trigonométrico simples para posicionar em arco
+          // Isso garante que o leque fique perfeito visualmente
+          const radian = (angle * Math.PI) / 180;
+          const x = Math.sin(radian) * (radius * 0.8); 
+          const y = Math.cos(radian) * (radius * 0.2); // Achatamento vertical para efeito 3D
           
           return (
             <motion.div
               key={card.id}
-              className="absolute origin-bottom cursor-pointer shadow-xl rounded-lg border border-white/10"
+              className="absolute cursor-pointer shadow-2xl rounded-lg border border-white/10"
               style={{
-                width: isMobile ? 60 : 80,
-                height: isMobile ? 100 : 130,
-                rotate: angle,
-                x: index * (isMobile ? 1.5 : 3), // Pequeno offset lateral
+                width: isMobile ? 60 : 90,
+                height: isMobile ? 100 : 150,
+                left: '50%', // Centraliza horizontalmente
+                bottom: isMobile ? '50px' : '80px', // Posição base
+                marginLeft: isMobile ? -30 : -45, // Ajuste do centro do elemento
+                transformOrigin: '50% 150%', // Ponto de rotação deslocado para baixo (efeito leque)
                 zIndex: isHovered ? 100 : index,
               }}
               animate={{
-                y: isHovered ? -40 : 0,
+                rotate: angle, // A rotação calculada
+                y: isHovered ? -40 : y * 1.5, // Levanta no hover, senão segue o arco Y
+                x: x, // Segue o arco X
                 scale: isHovered ? 1.2 : 1,
               }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               onMouseEnter={() => setHoveredCardId(card.id)}
               onMouseLeave={() => setHoveredCardId(null)}
               onClick={() => onCardSelect(card)}
             >
-              {/* Imagem do Verso da Carta */}
-              <div className="w-full h-full bg-slate-900 rounded-lg overflow-hidden relative">
-                 {/* Substitua pela sua imagem de verso de carta real */}
-                 <div className="w-full h-full border-2 border-yellow-600/50 bg-[url('https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/cartas/verso.jpg')] bg-cover bg-center" />
+              {/* VERSO DA CARTA - Design Padrão */}
+              <div className="w-full h-full bg-slate-900 rounded-lg overflow-hidden relative border-2 border-yellow-900/40">
+                {/* Textura ou Imagem do Verso */}
+                <div 
+                    className="w-full h-full opacity-80"
+                    style={{
+                        backgroundImage: `url('https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/cartas/verso.jpg')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                    }}
+                />
+                {/* Detalhe de borda interna (opcional, para dar acabamento premium) */}
+                <div className="absolute inset-1 border border-yellow-500/20 rounded-md"></div>
               </div>
             </motion.div>
           );
@@ -82,48 +109,58 @@ const SelectionStepEx: React.FC<SelectionStepExProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center w-full min-h-[70vh]">
+    <div className="flex flex-col items-center w-full min-h-[80vh]">
       
-      {/* Título da etapa */}
-      <h2 className="text-2xl md:text-3xl text-white font-serif mb-2">
-        Escolha {limit} Cartas
-      </h2>
-      <p className="text-slate-400 text-sm mb-6">
-        Siga sua intuição e toque nas cartas acima
-      </p>
+      {/* Cabeçalho */}
+      <div className="text-center mb-4 mt-4 z-10 relative">
+        <h2 className="text-3xl md:text-4xl text-white font-serif mb-2 drop-shadow-lg">
+          Escolha {limit} Cartas
+        </h2>
+        <p className="text-slate-300 text-sm font-medium tracking-wide">
+          Siga sua intuição
+        </p>
+      </div>
 
-      {/* 1. O LEQUE DE CARTAS */}
-      {renderFan()}
+      {/* 1. O LEQUE (Visualmente idêntico ao original) */}
+      <div className="-mt-10 md:-mt-16 w-full max-w-6xl mx-auto">
+        {renderFan()}
+      </div>
 
-      {/* 2. ÁREA DOS SLOTS (OS ESPAÇOS VAZIOS) */}
-      <div className="w-full max-w-4xl bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex flex-col items-center transition-all">
+      {/* 2. OS SLOTS (DINÂMICOS - Mudam conforme o limite) */}
+      {/* Container escuro arredondado igual ao print */}
+      <div className="w-full max-w-4xl bg-[#0a0a0f] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col items-center relative z-20 shadow-2xl">
         
-        {/* Renderiza dinamicamente a quantidade de slots baseada no 'limit' */}
-        <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-4">
+        {/* Grid de Slots */}
+        <div className="flex flex-wrap justify-center gap-3 md:gap-5 mb-4">
           {Array.from({ length: limit }).map((_, index) => {
-            const card = selectedCards[index]; // Pega a carta se ela existir nessa posição
-
+            const card = selectedCards[index];
+            
             return (
               <div 
                 key={index}
                 className={`
                   relative rounded-lg flex items-center justify-center transition-all duration-300
-                  ${isMobile ? 'w-12 h-20' : 'w-20 h-32'}
-                  ${card ? 'border-none shadow-lg shadow-purple-500/20' : 'border-2 border-dashed border-slate-600 bg-white/5'}
+                  ${isMobile ? 'w-14 h-24' : 'w-20 h-36'}
+                  ${card 
+                    ? 'border-none shadow-[0_0_15px_rgba(168,85,247,0.4)]' // Brilho roxo quando tem carta
+                    : 'border-2 border-dashed border-slate-700 bg-white/5' // Slot vazio discreto
+                  }
                 `}
               >
                 {card ? (
-                  // Se tiver carta selecionada, mostra ela
-                  <motion.img 
-                    initial={{ opacity: 0, scale: 0.8 }}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    src="https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/cartas/verso.jpg" 
-                    alt="Verso"
-                    className="w-full h-full object-cover rounded-lg border border-yellow-500/50"
-                  />
+                    className="w-full h-full"
+                  >
+                    <img 
+                      src="https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/cartas/verso.jpg" 
+                      alt={`Carta ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg border border-purple-500/30"
+                    />
+                  </motion.div>
                 ) : (
-                  // Se não, mostra o número do slot ou ícone vazio
-                  <span className="text-slate-600 font-bold text-lg">
+                  <span className="text-slate-700 font-bold text-lg select-none">
                     {index + 1}
                   </span>
                 )}
@@ -132,31 +169,38 @@ const SelectionStepEx: React.FC<SelectionStepExProps> = ({
           })}
         </div>
 
-        <div className="w-full flex justify-between items-center px-4 mt-2">
-          {/* Contador de texto */}
-          <span className="text-slate-400 font-medium">
-            {selectedCards.length} / {limit}
-          </span>
+        {/* Rodapé do Card: Contador e Botão */}
+        <div className="w-full flex justify-between items-center px-4 mt-4 h-12">
+            
+            {/* Contador */}
+            <span className="text-slate-300 font-medium tracking-widest text-sm md:text-base">
+                {selectedCards.length} / {limit}
+            </span>
 
-          {/* 3. BOTÃO "VER MESA" - SÓ APARECE SE ESTIVER COMPLETO */}
-          {isComplete ? (
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.05 }}
-              onClick={onNext}
-              className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-purple-900/50 flex items-center gap-2"
-            >
-              ✨ Ver Mesa
-            </motion.button>
-          ) : (
-            <div className="h-12 w-32" /> // Espaço vazio para não pular o layout
-          )}
+            {/* Botão de Ação (Só aparece quando completar) */}
+            <div className="flex-1 flex justify-end">
+                {isComplete && (
+                    <motion.button
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={onNext}
+                        className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-2 md:py-3 rounded-full font-bold shadow-lg shadow-purple-900/40 flex items-center gap-2 transition-colors"
+                    >
+                        <span className="mr-1">✨</span> Ver Mesa
+                    </motion.button>
+                )}
+            </div>
         </div>
       </div>
 
-      <button onClick={onBack} className="mt-8 text-slate-500 hover:text-white transition-colors text-sm flex items-center gap-2">
-        ← Mudar Pergunta
+      {/* Botão Mudar Pergunta (fora do card) */}
+      <button 
+        onClick={onBack} 
+        className="mt-8 px-6 py-2 border border-white/10 rounded-full text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm flex items-center gap-2"
+      >
+        <ArrowLeft size={16} /> Mudar Pergunta
       </button>
 
     </div>
