@@ -39,8 +39,11 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
   
   const resultRef = useRef<HTMLDivElement>(null);
   const totalCards = selectedCards.length;
-  
-  const isError = reading?.intro?.includes("Erro") || reading?.intro?.includes("falha");
+
+  // Detecção de erro robusta
+  const isError = reading?.intro?.includes("Erro") || 
+                  reading?.intro?.includes("falha") || 
+                  reading?.summary?.includes("tente novamente");
 
   const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
@@ -61,22 +64,15 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
     }
   };
 
-  // --- LAYOUT DA MESA (CORAÇÃO PARTIDO) ---
+  // LAYOUT DA MESA (6 CARTAS) - Estilo Coração Partido
   const getCardStyle = (index: number) => {
     switch (index) {
-      case 0: return "col-start-1 row-start-1"; // 1: Topo Esquerda
-      case 1: return "col-start-3 row-start-1"; // 2: Topo Direita
-      
-      case 2: return "col-start-1 row-start-2"; // 3: Baixo Esquerda
-      case 3: return "col-start-3 row-start-2"; // 4: Baixo Direita
-      
-      // AJUSTE DO FORMATO DE CORAÇÃO:
-      // Carta 5: Desce um pouco (translate-y-8) para ficar no "vale" do coração
-      case 4: return "col-start-2 row-start-1 translate-y-8 z-10"; 
-      
-      // Carta 6: Desce MUITO (translate-y-16) para formar a PONTA de baixo do coração
-      case 5: return "col-start-2 row-start-2 translate-y-16 z-10"; 
-      
+      case 0: return "col-start-1 row-start-1"; // 1: Topo Esq
+      case 1: return "col-start-3 row-start-1"; // 2: Topo Dir
+      case 2: return "col-start-1 row-start-2"; // 3: Baixo Esq
+      case 3: return "col-start-3 row-start-2"; // 4: Baixo Dir
+      case 4: return "col-start-2 row-start-1 translate-y-8"; // 5: Centro Topo (deslocado)
+      case 5: return "col-start-2 row-start-2 translate-y-16"; // 6: Centro Baixo (ponta do coração)
       default: return "";
     }
   };
@@ -91,8 +87,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
           <p className="text-slate-400 italic text-lg md:text-xl">"{question}"</p>
         </div>
 
-        {/* GRID 3 COLUNAS */}
-        {/* Adicionei 'mb-20' (margem em baixo) grande para a carta 6 não encostar no texto */}
+        {/* GRID 3 COLUNAS - Layout Coração Partido */}
         <div className="grid grid-cols-3 gap-x-3 gap-y-4 max-w-lg mx-auto mb-20 w-full relative perspective-1000 py-4 justify-items-center">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
@@ -105,17 +100,13 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
 
             return (
               <div key={card.id} className={`w-20 md:w-24 aspect-[2/3] relative group ${customClass}`}>
-                
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white/30 font-serif text-xs font-bold">
                     {index + 1}
                 </div>
-
                 <div className="w-full h-full relative transition-transform" style={transformStyle}>
-                  {/* VERSO */}
                   <div className="absolute inset-0 w-full h-full rounded-xl border border-fuchsia-500/30 bg-indigo-950 overflow-hidden shadow-2xl" style={{ backfaceVisibility: 'hidden' as const }}>
                     <img src={CARD_BACK_URL} className="w-full h-full object-cover opacity-90 rounded-xl" alt="verso" />
                   </div>
-                  {/* FRENTE */}
                   <div className="absolute inset-0 w-full h-full rounded-xl border-2 border-fuchsia-500/70 overflow-hidden shadow-[0_0_30px_rgba(235,50,235,0.15)] bg-black" style={{ backfaceVisibility: 'hidden' as const, transform: 'rotateY(180deg)' }}>
                     <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover rounded-xl" />
                   </div>
@@ -125,7 +116,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
           })}
         </div>
 
-        {/* RESULTADO */}
+        {/* ÁREA DE RESULTADO (Com tratamento de Erro) */}
         {revealedLocal === totalCards && (
           <div className="w-full animate-fade-in-up space-y-8 pb-8">
             {isLoadingAI || !reading ? (
@@ -135,13 +126,24 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
               </div>
             ) : (
               <>
+                {/* SE DER ERRO: Mostra Aviso + Botão Tentar Novamente */}
                 {isError ? (
-                    <div className="bg-red-900/50 border-l-4 border-red-500 p-6 rounded-r-xl backdrop-blur-md shadow-lg text-center">
-                        <h3 className="text-xl text-white font-bold mb-2">Houve uma falha na conexão</h3>
-                        <p className="text-slate-200">{reading.intro}</p>
-                        <p className="text-slate-400 text-sm mt-2">{reading.advice}</p>
+                    <div className="bg-red-900/50 border-l-4 border-red-500 p-8 rounded-r-xl backdrop-blur-md shadow-lg text-center max-w-2xl mx-auto">
+                        <div className="mb-4 text-red-300">
+                            <RotateCcw size={32} className="mx-auto mb-2 opacity-80" />
+                            <h3 className="text-xl text-white font-bold">Falha na Conexão</h3>
+                        </div>
+                        <p className="text-slate-200 text-lg mb-6">{reading.intro}</p>
+                        
+                        <button 
+                            onClick={onReveal} 
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
+                        >
+                            <RefreshCw size={20} /> Tentar Novamente
+                        </button>
                     </div>
                 ) : (
+                    // SE DER CERTO: Mostra a Leitura Normal
                     <>
                         <div className="bg-slate-900/80 border-l-4 border-fuchsia-500 p-6 rounded-r-xl backdrop-blur-md">
                         <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
@@ -162,7 +164,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
 
                         <div className="bg-slate-950 border border-fuchsia-500/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
                         <div>
-                            <h4 className="text-fuchsia-400 font-playfair text-2xl mb-2">Conclusão</h4>
+                            <h4 className="text-fuchsia-400 font-playfair text-2xl mb-2">Veredito</h4>
                             <p className="text-white text-lg font-medium">{reading.summary}</p>
                         </div>
                         <hr className="border-white/10" />
@@ -179,6 +181,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
         )}
       </div>
 
+      {/* BOTÃO REVELAR (Apenas no início) */}
       {revealedLocal === 0 && (
         <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
           <button
@@ -200,8 +203,10 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
         </div>
       )}
 
+      {/* BOTÕES FINAIS (Lógica Condicional) */}
       {revealedLocal === totalCards && reading && (
         <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20 mt-4">
+          {/* Se houver erro, mostra o botão Tentar Novamente também aqui embaixo */}
           {isError ? (
              <button 
                 onClick={onReveal} 
@@ -210,6 +215,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
                 <RefreshCw className="w-5 h-5" /> Tentar Novamente
              </button>
           ) : (
+             // Se SUCESSO, mostra os botões normais
              <>
                 <button onClick={onGoHome} className="flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-slate-300 hover:bg-white/10 transition-all font-semibold">
                     <Home className="w-5 h-5" /> Voltar ao Início
