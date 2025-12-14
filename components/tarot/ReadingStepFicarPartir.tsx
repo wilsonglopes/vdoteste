@@ -39,12 +39,8 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
   
   const resultRef = useRef<HTMLDivElement>(null);
   const totalCards = selectedCards.length;
-
-  // --- DETECÇÃO DE ERRO ---
-  // Verifica se a resposta da IA contém palavras chave de erro
-  const isError = reading?.intro?.includes("Erro") || 
-                  reading?.intro?.includes("falha") || 
-                  reading?.summary?.includes("tente novamente");
+  
+  const isError = reading?.intro?.includes("Erro") || reading?.intro?.includes("falha");
 
   const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
@@ -65,15 +61,22 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
     }
   };
 
-  // LAYOUT DA MESA (6 CARTAS) - Estilo Coração Partido
+  // --- LAYOUT DA MESA (CORAÇÃO PARTIDO) ---
   const getCardStyle = (index: number) => {
     switch (index) {
-      case 0: return "col-start-1 row-start-1"; // 1: Situação Atual (Topo Esq)
-      case 1: return "col-start-3 row-start-1"; // 2: Por que ficar? (Topo Dir)
-      case 2: return "col-start-1 row-start-2"; // 3: Por que partir? (Baixo Esq)
-      case 3: return "col-start-3 row-start-2"; // 4: Sentimento Ficar (Baixo Dir)
-      case 4: return "col-start-2 row-start-1 translate-y-8"; // 5: Sentimento Partir (Centro Topo)
-      case 5: return "col-start-2 row-start-2"; // 6: Conselho (Centro Baixo)
+      case 0: return "col-start-1 row-start-1"; // 1: Topo Esquerda
+      case 1: return "col-start-3 row-start-1"; // 2: Topo Direita
+      
+      case 2: return "col-start-1 row-start-2"; // 3: Baixo Esquerda
+      case 3: return "col-start-3 row-start-2"; // 4: Baixo Direita
+      
+      // AJUSTE DO FORMATO DE CORAÇÃO:
+      // Carta 5: Desce um pouco (translate-y-8) para ficar no "vale" do coração
+      case 4: return "col-start-2 row-start-1 translate-y-8 z-10"; 
+      
+      // Carta 6: Desce MUITO (translate-y-16) para formar a PONTA de baixo do coração
+      case 5: return "col-start-2 row-start-2 translate-y-16 z-10"; 
+      
       default: return "";
     }
   };
@@ -88,8 +91,9 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
           <p className="text-slate-400 italic text-lg md:text-xl">"{question}"</p>
         </div>
 
-        {/* GRID ESPECÍFICO 3 COLUNAS x 2 LINHAS */}
-        <div className="grid grid-cols-3 gap-x-3 gap-y-4 max-w-lg mx-auto mb-10 w-full relative perspective-1000 py-4 justify-items-center">
+        {/* GRID 3 COLUNAS */}
+        {/* Adicionei 'mb-20' (margem em baixo) grande para a carta 6 não encostar no texto */}
+        <div className="grid grid-cols-3 gap-x-3 gap-y-4 max-w-lg mx-auto mb-20 w-full relative perspective-1000 py-4 justify-items-center">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
             const customClass = getCardStyle(index);
@@ -102,7 +106,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
             return (
               <div key={card.id} className={`w-20 md:w-24 aspect-[2/3] relative group ${customClass}`}>
                 
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-fuchsia-300/50 font-serif text-xs font-bold">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white/30 font-serif text-xs font-bold">
                     {index + 1}
                 </div>
 
@@ -121,43 +125,30 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
           })}
         </div>
 
-        {/* ÁREA DE RESULTADO OU MENSAGEM DE ERRO */}
+        {/* RESULTADO */}
         {revealedLocal === totalCards && (
           <div className="w-full animate-fade-in-up space-y-8 pb-8">
             {isLoadingAI || !reading ? (
               <div className="bg-slate-900/50 border border-fuchsia-500/20 p-10 rounded-2xl text-center backdrop-blur-md">
                 <Loader2 className="w-12 h-12 text-fuchsia-500 animate-spin mx-auto mb-4" />
-                <p className="text-purple-200 text-lg font-playfair">Consultando os oráculos...</p>
+                <p className="text-purple-200 text-xl font-playfair">Comparando os caminhos...</p>
               </div>
             ) : (
               <>
-                {/* BLOC0 DE ERRO COM BOTÃO DE RETRY */}
                 {isError ? (
-                    <div className="bg-red-900/40 border-l-4 border-red-500 p-8 rounded-r-xl backdrop-blur-md shadow-2xl text-center max-w-2xl mx-auto">
-                        <div className="mb-4 text-red-300">
-                            <RotateCcw size={40} className="mx-auto mb-2 opacity-80" />
-                            <h3 className="text-2xl text-white font-bold mb-2">Conexão Interrompida</h3>
-                        </div>
-                        <p className="text-slate-200 text-lg mb-6">{reading.intro || "Não foi possível completar a interpretação."}</p>
-                        
-                        <button 
-                            onClick={onReveal} // Isso chama a função de revelar novamente (Tentar de novo)
-                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-red-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-3 mx-auto"
-                        >
-                            <RefreshCw size={24} className={isLoadingAI ? "animate-spin" : ""} />
-                            Tentar Novamente
-                        </button>
-                        <p className="text-slate-400 text-sm mt-4">Não se preocupe, suas cartas continuam na mesa.</p>
+                    <div className="bg-red-900/50 border-l-4 border-red-500 p-6 rounded-r-xl backdrop-blur-md shadow-lg text-center">
+                        <h3 className="text-xl text-white font-bold mb-2">Houve uma falha na conexão</h3>
+                        <p className="text-slate-200">{reading.intro}</p>
+                        <p className="text-slate-400 text-sm mt-2">{reading.advice}</p>
                     </div>
                 ) : (
-                    // RESULTADO NORMAL (SUCESSO)
                     <>
                         <div className="bg-slate-900/80 border-l-4 border-fuchsia-500 p-6 rounded-r-xl backdrop-blur-md">
                         <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
                         </div>
 
                         <div>
-                        <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-fuchsia-400" /> Comparativo</h3>
+                        <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-fuchsia-400" /> Comparação</h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {reading.individual_cards?.map((item: any, idx: number) => (
@@ -171,7 +162,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
 
                         <div className="bg-slate-950 border border-fuchsia-500/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
                         <div>
-                            <h4 className="text-fuchsia-400 font-playfair text-2xl mb-2">Veredito</h4>
+                            <h4 className="text-fuchsia-400 font-playfair text-2xl mb-2">Conclusão</h4>
                             <p className="text-white text-lg font-medium">{reading.summary}</p>
                         </div>
                         <hr className="border-white/10" />
@@ -188,7 +179,6 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
         )}
       </div>
 
-      {/* BOTÃO REVELAR (APENAS INÍCIO) */}
       {revealedLocal === 0 && (
         <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
           <button
@@ -210,20 +200,30 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
         </div>
       )}
 
-      {/* BOTÕES DE NAVEGAÇÃO FINAL (Só aparecem se NÃO for erro) */}
-      {revealedLocal === totalCards && reading && !isError && (
+      {revealedLocal === totalCards && reading && (
         <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20 mt-4">
-          <button onClick={onGoHome} className="flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-slate-300 hover:bg-white/10 transition-all font-semibold">
-            <Home className="w-5 h-5" /> Voltar ao Início
-          </button>
-          
-          <button onClick={onNewReading} className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-fuchsia-600 text-white hover:bg-fuchsia-500 transition-all font-semibold shadow-lg">
-            <RotateCcw className="w-5 h-5" /> Nova Consulta
-          </button>
-          
-          <button onClick={handleDownloadPDF} className="flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-full font-bold shadow-lg hover:scale-[1.02] transition-all">
-            <Download className="w-5 h-5" /> <span id="btn-pdf-text">Baixar em PDF</span>
-          </button>
+          {isError ? (
+             <button 
+                onClick={onReveal} 
+                className="flex items-center justify-center gap-2 px-8 py-4 bg-red-600 text-white rounded-full font-bold shadow-lg hover:bg-red-500 hover:scale-[1.02] transition-all w-full md:w-auto"
+             >
+                <RefreshCw className="w-5 h-5" /> Tentar Novamente
+             </button>
+          ) : (
+             <>
+                <button onClick={onGoHome} className="flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-slate-300 hover:bg-white/10 transition-all font-semibold">
+                    <Home className="w-5 h-5" /> Voltar ao Início
+                </button>
+                
+                <button onClick={onNewReading} className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-fuchsia-600 text-white hover:bg-fuchsia-500 transition-all font-semibold shadow-lg">
+                    <RotateCcw className="w-5 h-5" /> Nova Consulta
+                </button>
+                
+                <button onClick={handleDownloadPDF} className="flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-full font-bold shadow-lg hover:scale-[1.02] transition-all">
+                    <Download className="w-5 h-5" /> <span id="btn-pdf-text">Baixar em PDF</span>
+                </button>
+             </>
+          )}
         </div>
       )}
 
