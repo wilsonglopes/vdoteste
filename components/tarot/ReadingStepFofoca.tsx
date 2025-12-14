@@ -72,8 +72,6 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
         </div>
 
         {/* --- GRID CORRIGIDO: 3 COLUNAS x 4 LINHAS --- */}
-        {/* 'grid-cols-3' fixo para garantir 3 cartas por linha sempre */}
-        {/* max-w-md para manter as cartas próximas horizontalmente */}
         <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-md mx-auto mb-10 w-full relative perspective-1000 py-4 justify-items-center">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
@@ -122,6 +120,15 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
                         <h3 className="text-xl text-white font-bold mb-2">Houve uma falha na conexão</h3>
                         <p className="text-slate-200">{reading.intro}</p>
                         <p className="text-slate-400 text-sm mt-2">{reading.advice}</p>
+                        
+                        {/* BOTÃO TENTAR NOVAMENTE (NOVO) */}
+                        <button 
+                            onClick={onReveal} 
+                            className="mt-6 bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
+                        >
+                            <RefreshCw size={20} className={isLoadingAI ? "animate-spin" : ""} />
+                            Tentar Novamente
+                        </button>
                     </div>
                 ) : (
                     <>
@@ -132,7 +139,6 @@ const ReadingStepFofoca: React.FC<ReadingStepFofocaProps> = ({
                         <div>
                         <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-pink-400" /> O que foi revelado</h3>
                         
-                        {/* Mantive 2 colunas para o texto não ficar muito comprimido */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {reading.individual_cards?.map((item: any, idx: number) => (
                             <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-pink-500/30 transition-colors">
