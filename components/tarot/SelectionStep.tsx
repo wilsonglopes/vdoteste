@@ -17,7 +17,7 @@ interface SelectionStepProps {
   onNext: () => void;
   onBack: () => void;
   isMobile: boolean;
-  maxCards: number; // AQUI ESTÁ A CHAVE: Recebe o número (5) da página pai
+  maxCards: number; // Recebe o número correto (5, 7, etc)
 }
 
 const SelectionStep: React.FC<SelectionStepProps> = ({
@@ -33,6 +33,7 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Centraliza o leque ao carregar
   useEffect(() => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
@@ -41,54 +42,72 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
     }
   }, []);
 
-  // O BOTÃO SÓ APARECE SE O NÚMERO DE CARTAS FOR IGUAL AO MÁXIMO
   const isComplete = selectedCards.length === maxCards;
 
   return (
     <div className="flex flex-col items-center w-full h-full relative">
       
-      {/* Título Dinâmico: Mostra "Escolha 5 Cartas" */}
-      <div className="text-center mb-4 z-10">
-        <h2 className="text-2xl font-serif text-white mb-1">
+      {/* Título */}
+      <div className="text-center mb-2 z-10">
+        <h2 className="text-2xl font-serif text-white">
           Escolha {maxCards} Cartas
         </h2>
-        <p className="text-slate-400 text-sm animate-pulse">Siga sua intuição</p>
+        <p className="text-slate-400 text-xs animate-pulse">Siga sua intuição</p>
       </div>
 
-      {/* Leque de Cartas */}
+      {/* --- LEQUE DE CARTAS (LÓGICA ORIGINAL RESTAURADA) --- */}
       <div 
         ref={scrollRef}
-        className="w-full flex-1 flex items-center overflow-x-auto py-4 px-4 custom-scrollbar select-none"
+        className="w-full flex-1 flex items-center overflow-x-auto py-10 px-4 custom-scrollbar select-none"
         style={{ perspective: '1000px', overflowY: 'hidden' }}
       >
-        <div className="flex mx-auto min-w-max px-[50vw] items-center justify-center h-[300px]">
+        <div className="flex mx-auto min-w-max px-[10vw] items-center justify-center h-[350px]">
           <AnimatePresence>
             {availableCards.map((card, index) => {
+              // MATEMÁTICA DO ARCO PERFEITO (Restaurada)
               const total = availableCards.length;
               const mid = total / 2;
               const offset = index - mid;
-              const rotate = offset * 2.5; 
-              const yOffset = Math.abs(offset) * 2; 
+              
+              // Ajustes finos para o arco parecer natural
+              const rotate = offset * 3; // Grau de rotação
+              const yOffset = Math.abs(offset) * 3; // Curva vertical (sobe nas pontas ou desce no meio)
+              const xOffset = offset * -20; // Sobreposição lateral (negativo junta as cartas)
 
               return (
                 <motion.div
                   key={card.id}
-                  initial={{ opacity: 0, y: 100 }}
+                  layoutId={`card-${card.id}`}
+                  initial={{ opacity: 0, y: 200 }}
                   animate={{ 
                     opacity: 1, 
-                    y: yOffset,
-                    rotate: rotate,
-                    scale: hoveredCardId === card.id ? 1.1 : 1,
+                    y: yOffset, // Curva
+                    x: xOffset, // Sobreposição
+                    rotate: rotate, // Rotação em leque
+                    scale: hoveredCardId === card.id ? 1.15 : 1,
                     zIndex: hoveredCardId === card.id ? 100 : index
                   }}
-                  className="relative -ml-8 md:-ml-12 cursor-pointer transform-style-3d origin-bottom"
+                  exit={{ opacity: 0, scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                  className="relative cursor-pointer transform-style-3d origin-bottom"
+                  style={{ 
+                    transformOrigin: '50% 150%' // O PULO DO GATO: Rotaciona a partir de um ponto imaginário abaixo
+                  }}
                   onMouseEnter={() => setHoveredCardId(card.id)}
                   onMouseLeave={() => setHoveredCardId(null)}
                   onClick={() => onCardSelect(card)}
                 >
-                  <div className="w-20 h-32 md:w-32 md:h-48 rounded-xl bg-gradient-to-br from-indigo-950 to-purple-900 border border-purple-500/30 shadow-2xl transition-all duration-200">
-                    <div className="w-full h-full opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
-                    <div className="absolute inset-1 border border-white/10 rounded-lg" />
+                  {/* Visual da Carta (Verso Místico) */}
+                  <div className="w-24 h-40 md:w-32 md:h-52 rounded-xl bg-gradient-to-b from-[#1a1a2e] to-[#16213e] border border-[#ffffff20] shadow-2xl group-hover:border-yellow-400/80 group-hover:shadow-[0_0_25px_rgba(250,204,21,0.4)] transition-all duration-200">
+                    <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+                    <div className="absolute inset-1.5 border border-[#ffffff10] rounded-lg" />
+                    
+                    {/* Detalhe central */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                       <div className="w-12 h-12 border border-purple-500/30 rounded-full flex items-center justify-center">
+                          <div className="w-8 h-8 border border-purple-500/50 rotate-45" />
+                       </div>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -97,28 +116,24 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
         </div>
       </div>
 
-      {/* ÁREA DOS SLOTS (CORRIGIDA) */}
-      {/* Container transparente, sem fundo colorido */}
-      <div className="w-full max-w-4xl border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-4 md:p-6 mt-auto mb-4 relative z-20 shadow-lg">
+      {/* --- SLOTS (TRANSPARENTES E DINÂMICOS) --- */}
+      <div className="w-full max-w-4xl border-t border-white/10 p-4 mt-auto z-20">
         
-        <div className="flex justify-center gap-2 md:gap-3 flex-wrap">
-          
-          {/* AQUI ESTAVA O ERRO: Agora ele desenha EXATAMENTE 'maxCards' quadrados */}
+        <div className="flex justify-center gap-2 md:gap-3 flex-wrap mb-4">
           {Array.from({ length: maxCards }).map((_, index) => {
             const card = selectedCards[index];
             return (
               <div 
                 key={index}
-                className="w-10 h-16 md:w-14 md:h-20 rounded border border-dashed border-white/20 bg-transparent flex items-center justify-center relative overflow-hidden"
+                className="w-10 h-16 md:w-14 md:h-20 rounded border border-dashed border-white/20 bg-white/5 flex items-center justify-center relative overflow-hidden"
               >
                 {card ? (
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    className="w-full h-full bg-indigo-900"
-                  >
-                     <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
-                  </motion.div>
+                  <motion.img 
+                    src={card.imageUrl} 
+                    className="w-full h-full object-cover"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  />
                 ) : (
                   <span className="text-white/20 text-[10px] font-bold">{index + 1}</span>
                 )}
@@ -127,9 +142,12 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
           })}
         </div>
 
-        {/* Botão VER MESA (Aparece quando completa) */}
-        <div className="flex justify-between items-center mt-4 border-t border-white/10 pt-3">
-          <button onClick={onBack} className="text-slate-400 text-xs flex items-center gap-1 hover:text-white">
+        {/* Barra de Ações */}
+        <div className="flex justify-between items-center">
+          <button 
+            onClick={onBack}
+            className="flex items-center gap-2 text-slate-400 hover:text-white text-xs transition-colors px-3 py-2 rounded hover:bg-white/5"
+          >
             <RotateCcw size={14} /> Reiniciar
           </button>
 
@@ -138,13 +156,12 @@ const SelectionStep: React.FC<SelectionStepProps> = ({
           </span>
 
           <div className="w-24 flex justify-end">
-             {/* SELECIONOU 5 DE 5? ENTÃO APARECE O BOTÃO */}
              {isComplete && (
                <motion.button
                  initial={{ scale: 0.8, opacity: 0 }}
                  animate={{ scale: 1, opacity: 1 }}
                  onClick={onNext}
-                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-full font-bold text-xs shadow-lg animate-pulse"
+                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-full font-bold text-xs shadow-lg shadow-green-900/30 animate-pulse"
                >
                  Ver Mesa <ArrowRight size={14} />
                </motion.button>
