@@ -1,8 +1,7 @@
-// pages/Tarot.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { CARDS_TO_SELECT, DECK_SIZE, CARD_NAMES } from '../constants';
+import { DECK_SIZE, CARD_NAMES } from '../constants';
 import { getTarotReading } from '../services/geminiService';
 import { useTarotStore } from '../store/tarotStore';
 import { saveReading } from '../services/historyService';
@@ -12,14 +11,17 @@ import { consumeCredit } from '../services/userService';
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// Componentes das Etapas
-import QuestionStep from '../components/tarot/QuestionStep';
-import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
-import ReadingStep from '../components/tarot/ReadingStep';
+// --- COMPONENTES ESPECÍFICOS PARA "FICAR OU PARTIR" ---
+import QuestionStepFicarPartir from '../components/tarot/QuestionStepFicarPartir'; 
+import SelectionStepFicarPartir, { CardData } from '../components/tarot/SelectionStepFicarPartir';
+import ReadingStepFicarPartir from '../components/tarot/ReadingStepFicarPartir';
 
-const LOCAL_KEY = 'vozes_tarot_state_v1';
+// --- CONFIGURAÇÃO ---
+const READING_TYPE = 'ficar_ou_partir'; 
+const CARD_LIMIT = 6; // Limite fixo de 6 cartas
+const LOCAL_KEY = 'vozes_tarot_ficar_partir_v1'; 
 
-const Tarot: React.FC = () => {
+const TarotFicarPartir: React.FC = () => {
   const navigate = useNavigate();
 
   // --- STORE GLOBAL ---
@@ -39,17 +41,16 @@ const Tarot: React.FC = () => {
   const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
-  
+   
   const [revealedLocal, setRevealedLocal] = useState<number>(revealedCount || 0);
-  
+   
   const [showPlans, setShowPlans] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
   const abortRevealRef = useRef({ aborted: false });
   const mountedRef = useRef(true);
 
-  // --- 1. INICIALIZAÇÃO E SETUP ---
-
+  // --- 1. INICIALIZAÇÃO ---
   const handleNewReading = () => {
     abortRevealRef.current.aborted = true;
     if (typeof resetTarot === 'function') resetTarot();
@@ -107,11 +108,22 @@ const Tarot: React.FC = () => {
         if (parsed.question) setQuestion(parsed.question);
         if (parsed.selectedCards) setSelectedCards(parsed.selectedCards);
         if (parsed.step) setStep(parsed.step);
-        if (typeof parsed.revealedCount === 'number') {
-          setRevealedCount(parsed.revealedCount);
-          setRevealedLocal(parsed.revealedCount);
+        
+        if (parsed.reading) {
+            setReading(parsed.reading);
+            setLoadingAI(false); 
+        } else {
+            setLoadingAI(false); 
+            if (parsed.step === 'reveal') {
+                 setRevealedCount(0);
+                 setRevealedLocal(0);
+            }
         }
-        if (parsed.reading) setReading(parsed.reading);
+
+        if (typeof parsed.revealedCount === 'number' && parsed.reading) {
+           setRevealedCount(parsed.revealedCount);
+           setRevealedLocal(parsed.revealedCount);
+        }
       }
     } catch (e) { }
 
@@ -123,9 +135,9 @@ const Tarot: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const toStore = { question, selectedCards, step, revealedCount: revealedLocal, reading, isLoadingAI };
+    const toStore = { question, selectedCards, step, revealedCount: revealedLocal, reading, isLoadingAI: false };
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(toStore)); } catch (e) {}
-  }, [question, selectedCards, step, revealedLocal, reading, isLoadingAI]);
+  }, [question, selectedCards, step, revealedLocal, reading]);
 
   useEffect(() => {
     if (!deck || deck.length === 0) return;
@@ -138,7 +150,6 @@ const Tarot: React.FC = () => {
   }, [revealedCount]);
 
   // --- 2. NAVEGAÇÃO ---
-
   const handleStepBack = () => {
     if (step === 'question') {
       handleNewReading();
@@ -157,7 +168,7 @@ const Tarot: React.FC = () => {
   };
 
   const handleCardSelect = (card: CardData) => {
-    if (selectedCards.length >= CARDS_TO_SELECT) return;
+    if (selectedCards.length >= CARD_LIMIT) return;
     if (selectedCards.find(c => c.id === card.id)) return;
     setSelectedCards([...selectedCards, card]);
   };
@@ -173,6 +184,7 @@ const Tarot: React.FC = () => {
 
   const startReveal = async () => {
     if (revealingRef.current) return;
+    if (isLoadingAI) return;
     
     if (!user) {
       setShowAuth(true);
@@ -197,7 +209,7 @@ const Tarot: React.FC = () => {
       setRevealedLocal(0);
       setRevealedCount(0);
 
-      for (let i = 1; i <= CARDS_TO_SELECT; i++) {
+      for (let i = 1; i <= CARD_LIMIT; i++) {
         if (!mountedRef.current) break;
         await new Promise(res => setTimeout(res, 600));
         setRevealedLocal(i);
@@ -209,21 +221,23 @@ const Tarot: React.FC = () => {
         const userDob = user?.user_metadata?.birth_date || "";
         const cardIds = selectedCards.map(c => c.id);
 
-        const result = await getTarotReading(question, cardIds, userName, userDob);
+        const contextQuestion = `[MÉTODO: FICAR OU PARTIR? (6 CARTAS)] ${question}`;
+        
+        const result = await getTarotReading(contextQuestion, cardIds, userName, userDob);
         setReading(result);
 
         if (user) {
-          await saveReading(user.id, 'tarot', { question, cardIds }, result);
+          await saveReading(user.id, READING_TYPE, { question, cardIds }, result);
         }
 
       } catch (err) {
         console.error('[tarot] ai call failed', err);
         setReading({
-          intro: "Erro na consulta ao oráculo.",
+          intro: "Erro na conexão com o oráculo.",
           timeline: { past: "", present: "", future: "" },
           individual_cards: [],
           summary: "Tente novamente.",
-          advice: "Verifique sua conexão com a internet."
+          advice: "Verifique sua conexão."
         });
       }
 
@@ -233,26 +247,15 @@ const Tarot: React.FC = () => {
     }
   };
 
-  // --- 4. RENDERIZAÇÃO (Ajuste de Altura Aplicado) ---
-  // Removido 'min-h-screen' e substituído por 'w-full flex flex-col items-center relative'
-  // Isso faz o container ter apenas a altura do conteúdo, eliminando o espaço vazio roxo.
+  // --- 4. RENDERIZAÇÃO ---
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 w-full flex flex-col items-center relative overflow-x-hidden scrollbar-hide">
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
-      <AuthModal 
-        isOpen={showAuth} 
-        onClose={() => setShowAuth(false)} 
-        onSuccess={() => setShowAuth(false)} 
-      />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
       
       <PlansModal 
         isOpen={showPlans} 
@@ -264,7 +267,7 @@ const Tarot: React.FC = () => {
       />
 
       {step === 'question' && (
-        <QuestionStep 
+        <QuestionStepFicarPartir
           question={question}
           setQuestion={setQuestion}
           onNext={() => setStep('selection')}
@@ -273,7 +276,7 @@ const Tarot: React.FC = () => {
       )}
 
       {step === 'selection' && (
-        <SelectionStep 
+        <SelectionStepFicarPartir
           availableCards={availableCards}
           selectedCards={selectedCards}
           hoveredCardId={hoveredCardId}
@@ -282,11 +285,12 @@ const Tarot: React.FC = () => {
           onNext={handleGoToReveal}
           onBack={handleStepBack}
           isMobile={isMobile}
+          limit={CARD_LIMIT} 
         />
       )}
 
       {(step === 'reveal' || step === 'result') && (
-        <ReadingStep 
+        <ReadingStepFicarPartir
           question={question}
           selectedCards={selectedCards}
           revealedLocal={revealedLocal}
@@ -304,4 +308,4 @@ const Tarot: React.FC = () => {
   );
 };
 
-export default Tarot;
+export default TarotFicarPartir;
