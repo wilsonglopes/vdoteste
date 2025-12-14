@@ -13,7 +13,7 @@ import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
 // Componentes das Etapas
-import QuestionStep from '../components/tarot/QuestionStepMensal';
+import QuestionStep from '../components/tarot/QuestionStep';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
 
@@ -264,15 +264,11 @@ const Tarot: React.FC = () => {
       />
 
       {step === 'question' && (
-        <QuestionStepMensal 
-          question={question} 
-          setQuestion={setQuestion} 
-          onNext={() => setStep('selection')} 
-          onBack={() => navigate('/nova-leitura')}
-          
-          // --- PERSONALIZAÇÃO AQUI ---
-          customTitle="O que esperar do próximo mês?"
-          customPlaceholder="Ex: Como será minha vida financeira? O que esperar no amor nos próximos 30 dias?"
+        <QuestionStep 
+          question={question}
+          setQuestion={setQuestion}
+          onNext={() => setStep('selection')}
+          onBack={handleStepBack}
         />
       )}
 
@@ -308,6 +304,4 @@ const Tarot: React.FC = () => {
   );
 };
 
-
 export default Tarot;
-
