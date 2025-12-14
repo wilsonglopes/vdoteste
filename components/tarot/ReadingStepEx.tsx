@@ -1,8 +1,12 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { RefreshCw, Home, HeartCrack, Sparkles } from 'lucide-react'; // Ícone HeartCrack específico para Ex
+import React, { useRef } from 'react';
+// import { motion } from 'framer-motion'; // Se não estiver usando motion explicitamente no JSX abaixo, pode remover ou manter
+import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { CARD_BACK_URL } from '../../constants'; // Removido CARDS_TO_SELECT
+import { ReadingResult } from '../../services/geminiService';
 
-interface CardData {
+export interface CardData {
   id: number;
   name: string;
   imageUrl: string;
@@ -12,7 +16,7 @@ interface ReadingStepExProps {
   question: string;
   selectedCards: CardData[];
   revealedLocal: number;
-  reading: any;
+  reading: ReadingResult | null;
   isLoadingAI: boolean;
   user: any;
   onReveal: () => void;
@@ -27,160 +31,200 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
   revealedLocal,
   reading,
   isLoadingAI,
+  user,
   onReveal,
+  onBack,
   onGoHome,
   onNewReading
 }) => {
+  
+  const resultRef = useRef<HTMLDivElement>(null);
+  
+  // Limite dinâmico baseado na quantidade de cartas escolhidas (5)
+  const totalCards = selectedCards.length;
 
-  // Auto-iniciar revelação
-  useEffect(() => {
-    if (revealedLocal === 0 && !isLoadingAI && !reading) {
-      setTimeout(() => onReveal(), 500);
+  const handleDownloadPDF = async () => {
+    if (!resultRef.current) return;
+    
+    const btnText = document.getElementById('btn-pdf-text');
+    if(btnText) btnText.innerText = "Gerando...";
+
+    try {
+      const canvas = await html2canvas(resultRef.current, {
+        scale: 2,
+        backgroundColor: '#0f172a',
+        useCORS: true,
+        logging: false
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const filename = user?.user_metadata?.name ? `Leitura_Ex_${user.user_metadata.name}.pdf` : 'Leitura_Tarot_Ex.pdf';
+      pdf.save(filename);
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      alert("Não foi possível gerar o PDF. Tente novamente.");
+    } finally {
+      if(btnText) btnText.innerText = "Baixar em PDF";
     }
-  }, [revealedLocal, isLoadingAI, reading, onReveal]);
+  };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center pb-20">
+    <div className="w-full p-4 md:p-8 bg-transparent flex flex-col items-center">
       
-      {/* 1. Cabeçalho da Mesa (Igual ao original) */}
-      <div className="text-center mb-8 px-4 mt-2">
-        <h2 className="text-2xl md:text-3xl text-white font-serif mb-2 drop-shadow-md">
-          A Mensagem do Oráculo
-        </h2>
-        <p className="text-slate-400 italic max-w-lg mx-auto text-sm md:text-base">
-          "{question}"
-        </p>
-      </div>
+      <div id="reading-result" ref={resultRef} className="w-full flex flex-col items-center">
+        
+        <div className="text-center mb-6 w-full">
+          <h2 className="font-playfair text-3xl md:text-4xl text-white mb-2">A Mensagem do Oráculo</h2>
+          <p className="text-slate-400 italic text-lg md:text-xl">"{question}"</p>
+        </div>
 
-      {/* 2. Área das Cartas - Layout Centralizado para 5 Cartas */}
-      <div className="flex flex-wrap justify-center items-center gap-3 md:gap-5 mb-10 max-w-4xl px-2">
-        {selectedCards.map((card, index) => {
-          const isRevealed = index < revealedLocal;
-          
-          return (
-            <motion.div
-              key={card.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative w-24 h-40 md:w-32 md:h-52 perspective-1000"
-            >
-              <motion.div
-                className="w-full h-full relative preserve-3d transition-transform duration-700"
-                style={{ transformStyle: 'preserve-3d' }}
-                animate={{ rotateY: isRevealed ? 180 : 0 }}
-              >
-                {/* Costas */}
-                <div 
-                  className="absolute inset-0 backface-hidden rounded-lg border border-white/20 shadow-xl bg-slate-900"
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <img 
-                    src="https://lrbykdpwzixmgganirvo.supabase.co/storage/v1/object/public/cartas/verso.jpg" 
-                    alt="Verso" 
-                    className="w-full h-full object-cover rounded-lg opacity-90"
-                  />
-                </div>
+        {/* GRID ADAPTADO PARA 5 CARTAS (Flex Wrap para centralizar) */}
+        <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto mb-10 w-full">
+          {selectedCards.map((card, index) => {
+            const isRevealed = index < revealedLocal;
+            const transformStyle = {
+              transformStyle: 'preserve-3d' as const,
+              transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              transition: 'transform 900ms cubic-bezier(.2,.8,.25,1)'
+            };
 
-                {/* Frente */}
-                <div 
-                  className="absolute inset-0 backface-hidden rounded-lg border-2 border-[#D4AF37]/50 shadow-2xl overflow-hidden bg-black"
-                  style={{ 
-                    backfaceVisibility: 'hidden', 
-                    transform: 'rotateY(180deg)' 
-                  }}
-                >
-                  <img 
-                    src={card.imageUrl} 
-                    alt={card.name} 
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Nome da carta (Overlay sutil) */}
-                  <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/90 to-transparent p-2 pt-6 text-center">
-                    <span className="text-[10px] md:text-xs text-[#D4AF37] font-serif uppercase tracking-widest">
-                      {card.name}
-                    </span>
+            return (
+              // Ajustei a largura para ficar proporcional (w-24 md:w-32) ou manter o aspect ratio original
+              <div key={card.id} className="w-24 md:w-32 aspect-[2/3] relative group perspective-1000">
+                <div className="w-full h-full relative transition-transform" style={transformStyle}>
+                  {/* VERSO */}
+                  <div className="absolute inset-0 w-full h-full rounded-xl border border-purple-500/30 bg-indigo-950 overflow-hidden shadow-2xl" style={{ backfaceVisibility: 'hidden' as const }}>
+                    <img src={CARD_BACK_URL} className="w-full h-full object-cover opacity-90 rounded-xl" alt="verso" />
+                  </div>
+                  {/* FRENTE */}
+                  <div className="absolute inset-0 w-full h-full rounded-xl border-2 border-gold/70 overflow-hidden shadow-[0_0_30px_rgba(255,215,0,0.15)] bg-black" style={{ backfaceVisibility: 'hidden' as const, transform: 'rotateY(180deg)' }}>
+                    <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover rounded-xl" />
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
-          );
-        })}
-      </div>
+              </div>
+            );
+          })}
+        </div>
 
-      {/* 3. Área de Resultado (IA) */}
-      <div className="w-full max-w-3xl px-4 z-20">
-        
-        {/* Loading State */}
-        {isLoadingAI && (
-          <div className="flex flex-col items-center justify-center py-12 space-y-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-            >
-              <Sparkles className="text-purple-400 w-10 h-10" />
-            </motion.div>
-            <p className="text-purple-200 animate-pulse font-serif">
-              Interpretando as energias...
-            </p>
+        {/* ÁREA DE RESULTADO (Aparece quando todas viram) */}
+        {revealedLocal === totalCards && (
+          <div className="w-full animate-fade-in-up space-y-8 pb-8">
+            {isLoadingAI || !reading ? (
+              <div className="bg-slate-900/50 border border-purple-500/20 p-10 rounded-2xl text-center backdrop-blur-md">
+                <Loader2 className="w-12 h-12 text-gold animate-spin mx-auto mb-4" />
+                <p className="text-purple-200 text-xl font-playfair">A Cigana Esmeralda está lendo seu destino...</p>
+              </div>
+            ) : (
+              <>
+                <div className="bg-slate-900/80 border-l-4 border-gold p-6 rounded-r-xl backdrop-blur-md">
+                  <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-purple-400" /> Análise das Cartas</h3>
+                  <div className="space-y-4">
+                    {reading.individual_cards?.map((item: any, idx: number) => (
+                      <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
+                        <h4 className="text-gold font-bold mb-1 text-sm uppercase tracking-wider">Posição {idx + 1}: {item.card_name}</h4>
+                        <p className="text-slate-300 text-base leading-relaxed">{item.interpretation || item.meaning}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* TIMELINE (Se a leitura retornar timeline, exibe. Caso contrário, não quebra) */}
+                {reading.timeline && (
+                    <div>
+                    <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><Clock className="text-purple-400" /> Jornada do Tempo</h3>
+                    <div className="space-y-6">
+                        <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
+                        <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Passado / Base</span>
+                        <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.past}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 p-6 rounded-2xl border border-gold/40 shadow-lg">
+                        <span className="inline-block px-3 py-1 bg-gold text-purple-900 text-xs font-bold rounded-full mb-3 uppercase">Presente / Foco</span>
+                        <p className="text-white leading-relaxed text-lg">{reading.timeline.present}</p>
+                        </div>
+                        <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
+                        <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Futuro / Tendência</span>
+                        <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.future}</p>
+                        </div>
+                    </div>
+                    </div>
+                )}
+
+                <div className="bg-slate-950 border border-gold/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                  <div>
+                    <h4 className="text-gold font-playfair text-2xl mb-2">A Resposta do Oráculo</h4>
+                    <p className="text-white text-lg font-medium">{reading.summary}</p>
+                  </div>
+                  <hr className="border-white/10" />
+                  <div>
+                    <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho Final</p>
+                    <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
-
-        {/* Resultado Final */}
-        {!isLoadingAI && reading && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[#0B0B15]/90 border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-md"
-          >
-            <div className="space-y-6 text-slate-300 leading-relaxed font-light">
-               
-               {/* Introdução */}
-               <div className="border-b border-white/5 pb-4">
-                  <h3 className="text-xl text-white font-serif mb-2 flex items-center gap-2">
-                     <HeartCrack size={20} className="text-red-400"/> Visão Geral
-                  </h3>
-                  <p>{reading.intro}</p>
-               </div>
-
-               {/* Cartas Individuais */}
-               {reading.individual_cards && (
-                 <div className="grid gap-4 mt-4">
-                    {reading.individual_cards.map((item: any, i: number) => (
-                       <div key={i} className="bg-white/5 p-4 rounded-lg border-l-2 border-purple-500">
-                          <strong className="text-purple-300 block mb-1 text-sm uppercase tracking-wide">{item.card_name}</strong>
-                          <p className="text-sm opacity-90">{item.meaning}</p>
-                       </div>
-                    ))}
-                 </div>
-               )}
-
-               {/* Conselho */}
-               <div className="bg-purple-900/10 border border-purple-500/20 p-5 rounded-xl mt-6">
-                  <h4 className="text-purple-300 font-bold mb-2 text-sm uppercase tracking-wider">Conselho do Oráculo</h4>
-                  <p className="italic text-white">{reading.advice}</p>
-               </div>
-
-            </div>
-
-            {/* Botões Finais (Estilo idêntico) */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center pt-6 border-t border-white/5">
-              <button 
-                onClick={onNewReading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-full transition-all font-medium text-sm"
-              >
-                <RefreshCw size={18} /> Nova Pergunta
-              </button>
-              <button 
-                onClick={onGoHome}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-full font-bold shadow-lg shadow-purple-900/40 transition-all text-sm"
-              >
-                <Home size={18} /> Voltar ao Início
-              </button>
-            </div>
-          </motion.div>
-        )}
       </div>
+
+      {/* BOTÃO REVELAR (SÓ APARECE SE NENHUMA TIVER SIDO REVELADA AINDA) */}
+      {revealedLocal === 0 && (
+        <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
+          <button
+            onClick={onReveal}
+            className="bg-purple-600 text-white px-12 py-3 rounded-full font-bold text-lg hover:bg-yellow-400 hover:text-purple-900 transition-all shadow-lg w-full max-w-xs"
+          >
+            Revelar Agora
+          </button>
+          
+          <div className="w-full max-w-md flex justify-end mt-2">
+            <button 
+              onClick={onBack}
+              className="flex items-center gap-2 bg-slate-800/50 border border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white transition-all text-sm font-medium px-4 py-2 rounded-full backdrop-blur-sm"
+            >
+              <ArrowLeft size={16} />
+              <span>Trocar Cartas</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* BOTÕES FINAIS */}
+      {revealedLocal === totalCards && reading && (
+        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20">
+          <button 
+            onClick={onGoHome} 
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-slate-300 hover:bg-white/10 transition-all font-semibold"
+          >
+            <Home className="w-5 h-5" /> Voltar ao Início
+          </button>
+          
+          <button 
+            onClick={onNewReading} 
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-purple-600 text-white hover:bg-purple-500 transition-all font-semibold shadow-lg"
+          >
+            <RotateCcw className="w-5 h-5" /> Nova Consulta
+          </button>
+          
+          <button 
+            onClick={handleDownloadPDF} 
+            className="flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-bold shadow-lg hover:scale-[1.02] transition-all"
+          >
+            <Download className="w-5 h-5" /> <span id="btn-pdf-text">Baixar em PDF</span>
+          </button>
+        </div>
+      )}
+
     </div>
   );
 };
