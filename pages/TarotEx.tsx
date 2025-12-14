@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-// Importamos constantes globais apenas para o tamanho do deck e nomes
 import { DECK_SIZE, CARD_NAMES } from '../constants';
 import { getTarotReading } from '../services/geminiService';
 import { useTarotStore } from '../store/tarotStore';
@@ -13,15 +12,14 @@ import { consumeCredit } from '../services/userService';
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// --- COMPONENTES ESPECÍFICOS PARA A TIRADA DO EX ---
-// Aqui garantimos que estamos chamando os arquivos independentes que você criou
+// Componentes das Etapas
 import QuestionStepEx from '../components/tarot/QuestionStepEx'; 
-import SelectionStepEx, { CardData } from '../components/tarot/SelectionStepEx'; // <--- Alterado para o arquivo Ex
-import ReadingStepEx from '../components/tarot/ReadingStepEx'; // <--- Alterado para o arquivo Ex
+import SelectionStepEx, { CardData } from '../components/tarot/SelectionStepEx';
+import ReadingStepEx from '../components/tarot/ReadingStepEx';
 
-// --- CONFIGURAÇÃO ESPECÍFICA DESTA LEITURA ---
+// --- CONFIGURAÇÃO ---
 const READING_TYPE = 'tirada_ex'; 
-const CARD_LIMIT = 5; // Limite fixo de 5 cartas
+const CARD_LIMIT = 5;
 const LOCAL_KEY = 'vozes_tarot_ex_v1'; 
 
 const TarotEx: React.FC = () => {
@@ -87,6 +85,7 @@ const TarotEx: React.FC = () => {
     setAvailableCards(filtered);
   };
 
+  // EFEITO DE INICIALIZAÇÃO E RECUPERAÇÃO DE ESTADO
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -105,6 +104,7 @@ const TarotEx: React.FC = () => {
     initializeDeck();
     mountedRef.current = true;
 
+    // --- CORREÇÃO DO TRAVAMENTO AQUI ---
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) {
@@ -112,11 +112,26 @@ const TarotEx: React.FC = () => {
         if (parsed.question) setQuestion(parsed.question);
         if (parsed.selectedCards) setSelectedCards(parsed.selectedCards);
         if (parsed.step) setStep(parsed.step);
-        if (typeof parsed.revealedCount === 'number') {
-          setRevealedCount(parsed.revealedCount);
-          setRevealedLocal(parsed.revealedCount);
+        
+        // CORREÇÃO CRÍTICA: Se não tem leitura pronta, NUNCA recupere o estado "carregando".
+        // Isso força o app a destravar se o usuário recarregar a página durante o loading.
+        if (parsed.reading) {
+            setReading(parsed.reading);
+            setLoadingAI(false); // Se já tem leitura, não está carregando
+        } else {
+            setLoadingAI(false); // Se não tem leitura, garante que não está carregando
+            // Se estava na etapa de revelar mas travou, reseta a animação para o usuário clicar de novo
+            if (parsed.step === 'reveal') {
+                 setRevealedCount(0);
+                 setRevealedLocal(0);
+            }
         }
-        if (parsed.reading) setReading(parsed.reading);
+
+        if (typeof parsed.revealedCount === 'number' && parsed.reading) {
+           // Só restaura cartas viradas se a leitura já existe
+           setRevealedCount(parsed.revealedCount);
+           setRevealedLocal(parsed.revealedCount);
+        }
       }
     } catch (e) { }
 
@@ -127,10 +142,19 @@ const TarotEx: React.FC = () => {
     };
   }, []);
 
+  // SALVAR NO LOCALSTORAGE
   useEffect(() => {
-    const toStore = { question, selectedCards, step, revealedCount: revealedLocal, reading, isLoadingAI };
+    // IMPORTANTE: Nunca salvamos isLoadingAI como true no storage para evitar loops de travamento
+    const toStore = { 
+        question, 
+        selectedCards, 
+        step, 
+        revealedCount: revealedLocal, 
+        reading, 
+        isLoadingAI: false // Sempre salva como false
+    };
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(toStore)); } catch (e) {}
-  }, [question, selectedCards, step, revealedLocal, reading, isLoadingAI]);
+  }, [question, selectedCards, step, revealedLocal, reading]); // Removi isLoadingAI das dependências do save
 
   useEffect(() => {
     if (!deck || deck.length === 0) return;
@@ -178,6 +202,7 @@ const TarotEx: React.FC = () => {
 
   const startReveal = async () => {
     if (revealingRef.current) return;
+    if (isLoadingAI) return; // Evita duplo clique
     
     if (!user) {
       setShowAuth(true);
@@ -226,11 +251,11 @@ const TarotEx: React.FC = () => {
       } catch (err) {
         console.error('[tarot] ai call failed', err);
         setReading({
-          intro: "Erro na consulta ao oráculo.",
+          intro: "Ocorreu uma falha na conexão com o oráculo.",
           timeline: { past: "", present: "", future: "" },
           individual_cards: [],
-          summary: "Tente novamente.",
-          advice: "Verifique sua conexão com a internet."
+          summary: "Por favor, verifique sua internet e tente novamente.",
+          advice: "A energia precisa fluir. Tente recarregar a página."
         });
       }
 
@@ -273,7 +298,6 @@ const TarotEx: React.FC = () => {
       )}
 
       {step === 'selection' && (
-        // Usando o componente SelectionStepEx que tem os slots dinâmicos
         <SelectionStepEx 
           availableCards={availableCards}
           selectedCards={selectedCards}
@@ -288,7 +312,6 @@ const TarotEx: React.FC = () => {
       )}
 
       {(step === 'reveal' || step === 'result') && (
-        // Usando o componente ReadingStepEx que terá o layout específico de 5 cartas
         <ReadingStepEx 
           question={question}
           selectedCards={selectedCards}
