@@ -1,9 +1,8 @@
 import React, { useRef } from 'react';
-// import { motion } from 'framer-motion'; // Se não estiver usando motion explicitamente no JSX abaixo, pode remover ou manter
 import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { CARD_BACK_URL } from '../../constants'; // Removido CARDS_TO_SELECT
+import { CARD_BACK_URL } from '../../constants';
 import { ReadingResult } from '../../services/geminiService';
 
 export interface CardData {
@@ -39,31 +38,18 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
 }) => {
   
   const resultRef = useRef<HTMLDivElement>(null);
-  
-  // Limite dinâmico baseado na quantidade de cartas escolhidas (5)
   const totalCards = selectedCards.length;
 
   const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
-    
     const btnText = document.getElementById('btn-pdf-text');
     if(btnText) btnText.innerText = "Gerando...";
-
     try {
       const canvas = await html2canvas(resultRef.current, {
-        scale: 2,
-        backgroundColor: '#0f172a',
-        useCORS: true,
-        logging: false
+        scale: 2, backgroundColor: '#0f172a', useCORS: true, logging: false
       });
-
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
-      });
-
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [canvas.width, canvas.height] });
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
       const filename = user?.user_metadata?.name ? `Leitura_Ex_${user.user_metadata.name}.pdf` : 'Leitura_Tarot_Ex.pdf';
       pdf.save(filename);
@@ -72,6 +58,26 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
       alert("Não foi possível gerar o PDF. Tente novamente.");
     } finally {
       if(btnText) btnText.innerText = "Baixar em PDF";
+    }
+  };
+
+  // Função auxiliar para definir a posição específica de cada carta no Grid
+  const getCardStyle = (index: number) => {
+    switch (index) {
+      case 0: // Carta 1: Topo Esquerda
+        return "col-start-1 justify-self-end";
+      case 1: // Carta 2: Topo Direita
+        return "col-start-2 justify-self-start";
+      case 2: // Carta 3: Centro (Deitada/Horizontal)
+        // rotate-90 para deitar, scale-90 para ajustar o tamanho visual
+        return "col-span-2 row-start-2 justify-self-center rotate-90 z-10 my-6 scale-90";
+      case 3: // Carta 4: Base Esquerda
+        return "col-start-1 row-start-3 justify-self-end";
+      case 4: // Carta 5: Base Direita (Inclinada/Diagonal)
+        // rotate-45 para dar o efeito "caído" da imagem
+        return "col-start-2 row-start-3 justify-self-start rotate-[30deg] translate-y-4 translate-x-2";
+      default:
+        return "";
     }
   };
 
@@ -85,10 +91,13 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
           <p className="text-slate-400 italic text-lg md:text-xl">"{question}"</p>
         </div>
 
-        {/* GRID ADAPTADO PARA 5 CARTAS (Flex Wrap para centralizar) */}
-        <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto mb-10 w-full">
+        {/* --- LAYOUT ESPECÍFICO DA TIRADA DO EX (GRID) --- */}
+        {/* Grid de 2 colunas para posicionar 1-2 e 4-5, com a 3 centralizada */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 max-w-md mx-auto mb-12 w-full relative perspective-1000 py-4">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
+            const customClass = getCardStyle(index);
+
             const transformStyle = {
               transformStyle: 'preserve-3d' as const,
               transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -96,8 +105,12 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
             };
 
             return (
-              // Ajustei a largura para ficar proporcional (w-24 md:w-32) ou manter o aspect ratio original
-              <div key={card.id} className="w-24 md:w-32 aspect-[2/3] relative group perspective-1000">
+              <div key={card.id} className={`w-24 md:w-28 aspect-[2/3] relative group ${customClass}`}>
+                {/* Números indicadores de posição (opcional, para guiar igual à imagem) */}
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white/30 font-serif text-sm font-bold">
+                    {index + 1}
+                </div>
+
                 <div className="w-full h-full relative transition-transform" style={transformStyle}>
                   {/* VERSO */}
                   <div className="absolute inset-0 w-full h-full rounded-xl border border-purple-500/30 bg-indigo-950 overflow-hidden shadow-2xl" style={{ backfaceVisibility: 'hidden' as const }}>
@@ -113,7 +126,7 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
           })}
         </div>
 
-        {/* ÁREA DE RESULTADO (Aparece quando todas viram) */}
+        {/* ÁREA DE RESULTADO (Lógica mantida idêntica) */}
         {revealedLocal === totalCards && (
           <div className="w-full animate-fade-in-up space-y-8 pb-8">
             {isLoadingAI || !reading ? (
@@ -139,7 +152,6 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
                   </div>
                 </div>
 
-                {/* TIMELINE (Se a leitura retornar timeline, exibe. Caso contrário, não quebra) */}
                 {reading.timeline && (
                     <div>
                     <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><Clock className="text-purple-400" /> Jornada do Tempo</h3>
@@ -177,7 +189,6 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
         )}
       </div>
 
-      {/* BOTÃO REVELAR (SÓ APARECE SE NENHUMA TIVER SIDO REVELADA AINDA) */}
       {revealedLocal === 0 && (
         <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
           <button
@@ -199,7 +210,6 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
         </div>
       )}
 
-      {/* BOTÕES FINAIS */}
       {revealedLocal === totalCards && reading && (
         <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20">
           <button 
