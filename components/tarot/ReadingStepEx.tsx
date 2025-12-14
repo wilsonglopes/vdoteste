@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft } from 'lucide-react';
+import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft, RefreshCw } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { CARD_BACK_URL } from '../../constants';
@@ -40,6 +40,12 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
   const resultRef = useRef<HTMLDivElement>(null);
   const totalCards = selectedCards.length;
 
+  // --- DETECÇÃO DE ERRO ---
+  // Verifica se o texto retornado pela IA indica falha
+  const isError = reading?.intro?.includes("Erro") || 
+                  reading?.intro?.includes("falha") || 
+                  reading?.summary?.includes("tente novamente");
+
   const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
     const btnText = document.getElementById('btn-pdf-text');
@@ -69,12 +75,10 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
       case 1: // Carta 2: Topo Direita
         return "col-start-2 justify-self-start";
       case 2: // Carta 3: Centro (Deitada/Horizontal)
-        // Alterado my-6 para my-2 para aproximar verticalmente
         return "col-span-2 row-start-2 justify-self-center rotate-90 z-10 my-2 scale-90";
       case 3: // Carta 4: Base Esquerda
         return "col-start-1 row-start-3 justify-self-end";
       case 4: // Carta 5: Base Direita (Inclinada/Diagonal)
-        // Alterado para -rotate-[30deg] (inclina para a esquerda)
         return "col-start-2 row-start-3 justify-self-start -rotate-[30deg] translate-y-4 -translate-x-2";
       default:
         return "";
@@ -92,7 +96,6 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
         </div>
 
         {/* --- LAYOUT ESPECÍFICO DA TIRADA DO EX (GRID) --- */}
-        {/* Alterado gap-x-8 para gap-x-2 (mais próximas horizontalmente) */}
         <div className="grid grid-cols-2 gap-x-2 gap-y-1 max-w-md mx-auto mb-12 w-full relative perspective-1000 py-4">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
@@ -136,53 +139,76 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
               </div>
             ) : (
               <>
-                <div className="bg-slate-900/80 border-l-4 border-gold p-6 rounded-r-xl backdrop-blur-md">
-                  <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-purple-400" /> Análise das Cartas</h3>
-                  <div className="space-y-4">
-                    {reading.individual_cards?.map((item: any, idx: number) => (
-                      <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
-                        <h4 className="text-gold font-bold mb-1 text-sm uppercase tracking-wider">Posição {idx + 1}: {item.card_name}</h4>
-                        <p className="text-slate-300 text-base leading-relaxed">{item.interpretation || item.meaning}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {reading.timeline && (
-                    <div>
-                    <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><Clock className="text-purple-400" /> Jornada do Tempo</h3>
-                    <div className="space-y-6">
-                        <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
-                        <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Passado / Base</span>
-                        <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.past}</p>
+                {/* LÓGICA DE ERRO VS SUCESSO */}
+                {isError ? (
+                    <div className="bg-red-900/40 border-l-4 border-red-500 p-8 rounded-r-xl backdrop-blur-md shadow-2xl text-center max-w-2xl mx-auto">
+                        <div className="mb-4 text-red-300">
+                            <RotateCcw size={40} className="mx-auto mb-2 opacity-80" />
+                            <h3 className="text-2xl text-white font-bold mb-2">Conexão Interrompida</h3>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 p-6 rounded-2xl border border-gold/40 shadow-lg">
-                        <span className="inline-block px-3 py-1 bg-gold text-purple-900 text-xs font-bold rounded-full mb-3 uppercase">Presente / Foco</span>
-                        <p className="text-white leading-relaxed text-lg">{reading.timeline.present}</p>
-                        </div>
-                        <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
-                        <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Futuro / Tendência</span>
-                        <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.future}</p>
-                        </div>
+                        <p className="text-slate-200 text-lg mb-6">{reading.intro}</p>
+                        
+                        {/* Botão que refaz a chamada da API sem recarregar a página */}
+                        <button 
+                            onClick={onReveal} 
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-3 mx-auto"
+                        >
+                            <RefreshCw size={24} className={isLoadingAI ? "animate-spin" : ""} />
+                            Tentar Novamente
+                        </button>
                     </div>
-                    </div>
+                ) : (
+                    // Conteúdo de Sucesso (Original)
+                    <>
+                        <div className="bg-slate-900/80 border-l-4 border-gold p-6 rounded-r-xl backdrop-blur-md">
+                        <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
+                        </div>
+
+                        <div>
+                        <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-purple-400" /> Análise das Cartas</h3>
+                        <div className="space-y-4">
+                            {reading.individual_cards?.map((item: any, idx: number) => (
+                            <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
+                                <h4 className="text-gold font-bold mb-1 text-sm uppercase tracking-wider">Posição {idx + 1}: {item.card_name}</h4>
+                                <p className="text-slate-300 text-base leading-relaxed">{item.interpretation || item.meaning}</p>
+                            </div>
+                            ))}
+                        </div>
+                        </div>
+
+                        {reading.timeline && (
+                            <div>
+                            <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><Clock className="text-purple-400" /> Jornada do Tempo</h3>
+                            <div className="space-y-6">
+                                <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
+                                <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Passado / Base</span>
+                                <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.past}</p>
+                                </div>
+                                <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 p-6 rounded-2xl border border-gold/40 shadow-lg">
+                                <span className="inline-block px-3 py-1 bg-gold text-purple-900 text-xs font-bold rounded-full mb-3 uppercase">Presente / Foco</span>
+                                <p className="text-white leading-relaxed text-lg">{reading.timeline.present}</p>
+                                </div>
+                                <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
+                                <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Futuro / Tendência</span>
+                                <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.future}</p>
+                                </div>
+                            </div>
+                            </div>
+                        )}
+
+                        <div className="bg-slate-950 border border-gold/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                        <div>
+                            <h4 className="text-gold font-playfair text-2xl mb-2">A Resposta do Oráculo</h4>
+                            <p className="text-white text-lg font-medium">{reading.summary}</p>
+                        </div>
+                        <hr className="border-white/10" />
+                        <div>
+                            <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho Final</p>
+                            <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
+                        </div>
+                        </div>
+                    </>
                 )}
-
-                <div className="bg-slate-950 border border-gold/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
-                  <div>
-                    <h4 className="text-gold font-playfair text-2xl mb-2">A Resposta do Oráculo</h4>
-                    <p className="text-white text-lg font-medium">{reading.summary}</p>
-                  </div>
-                  <hr className="border-white/10" />
-                  <div>
-                    <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho Final</p>
-                    <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
-                  </div>
-                </div>
               </>
             )}
           </div>
@@ -210,7 +236,8 @@ const ReadingStepEx: React.FC<ReadingStepExProps> = ({
         </div>
       )}
 
-      {revealedLocal === totalCards && reading && (
+      {/* Exibe botões finais APENAS se não houver erro */}
+      {revealedLocal === totalCards && reading && !isError && (
         <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20">
           <button 
             onClick={onGoHome} 
