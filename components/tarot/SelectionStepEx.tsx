@@ -17,7 +17,7 @@ interface SelectionStepProps {
   onNext: () => void;
   onBack: () => void;
   isMobile: boolean;
-  // maxCards não é necessário passar via prop, pois este arquivo É FIXO em 5
+  // Não precisamos de maxCards aqui, é fixo em 5
 }
 
 const SelectionStepEx: React.FC<SelectionStepProps> = ({
@@ -30,9 +30,9 @@ const SelectionStepEx: React.FC<SelectionStepProps> = ({
   onBack,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const MAX_CARDS = 5; // FIXO: Nunca vai mudar neste arquivo
+  const FIXED_LIMIT = 5; // TRAVADO EM 5
 
-  // Centraliza o leque ao iniciar
+  // Centraliza o scroll
   useEffect(() => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
@@ -41,19 +41,19 @@ const SelectionStepEx: React.FC<SelectionStepProps> = ({
     }
   }, []);
 
-  const isComplete = selectedCards.length === MAX_CARDS;
+  const isComplete = selectedCards.length === FIXED_LIMIT;
 
   return (
     <div className="flex flex-col items-center w-full h-full relative">
       
-      <div className="text-center mb-2 z-10">
+      <div className="text-center mb-6 z-10">
         <h2 className="text-2xl font-serif text-white">
-          Escolha {MAX_CARDS} Cartas
+          Escolha {FIXED_LIMIT} Cartas
         </h2>
         <p className="text-slate-400 text-xs animate-pulse">Siga sua intuição</p>
       </div>
 
-      {/* --- LEQUE AJUSTADO PARA 5 CARTAS (Mais espaçado) --- */}
+      {/* --- LEQUE RESTAURADO (Lógica do Arco Original) --- */}
       <div 
         ref={scrollRef}
         className="w-full flex-1 flex items-center overflow-x-auto py-10 px-4 custom-scrollbar select-none"
@@ -62,15 +62,15 @@ const SelectionStepEx: React.FC<SelectionStepProps> = ({
         <div className="flex mx-auto min-w-max px-[10vw] items-center justify-center h-[350px]">
           <AnimatePresence>
             {availableCards.map((card, index) => {
-              // MATEMÁTICA ESPECÍFICA PARA 5 A 10 CARTAS (Fica bonito com poucas cartas)
+              // MATEMÁTICA DO ARCO QUE VOCÊ GOSTA
               const total = availableCards.length;
               const mid = total / 2;
               const offset = index - mid;
               
-              // Ajuste: Com poucas cartas, podemos espaçar mais (rotate maior)
-              const rotate = offset * 5; // 5 graus de rotação (mais aberto)
-              const yOffset = Math.abs(offset) * 5; // Curva mais acentuada
-              const xOffset = offset * 10; // Positivo = separa as cartas (não sobrepõe tanto)
+              // Rotação suave baseada no centro
+              const rotate = offset * 2.5; 
+              // Curva em arco (sobe nas pontas)
+              const yOffset = Math.abs(offset) * 2.5; 
 
               return (
                 <motion.div
@@ -79,27 +79,28 @@ const SelectionStepEx: React.FC<SelectionStepProps> = ({
                   initial={{ opacity: 0, y: 200 }}
                   animate={{ 
                     opacity: 1, 
-                    y: yOffset + 20, // Empurra um pouco pra baixo
-                    x: xOffset,
-                    rotate: rotate,
+                    y: yOffset, // Aplica a curva
+                    rotate: rotate, // Aplica a rotação
                     scale: hoveredCardId === card.id ? 1.15 : 1,
                     zIndex: hoveredCardId === card.id ? 100 : index
                   }}
                   exit={{ opacity: 0, scale: 0 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                  className="relative cursor-pointer transform-style-3d origin-bottom"
+                  // O SEGREDO DO LEQUE PERFEITO ESTÁ AQUI:
                   style={{ 
-                    marginRight: '-20px', 
-                    transformOrigin: '50% 120%' // Ponto de rotação ajustado
+                    transformOrigin: '50% 200%', // O ponto de rotação é bem abaixo da carta
+                    marginLeft: '-40px' // Sobreposição das cartas
                   }}
+                  className="relative cursor-pointer"
                   onMouseEnter={() => setHoveredCardId(card.id)}
                   onMouseLeave={() => setHoveredCardId(null)}
                   onClick={() => onCardSelect(card)}
                 >
-                  {/* Visual da Carta (Igual em todos) */}
+                  {/* Visual da Carta (Verso) */}
                   <div className="w-24 h-40 md:w-32 md:h-52 rounded-xl bg-gradient-to-b from-[#1a1a2e] to-[#16213e] border border-[#ffffff20] shadow-2xl group-hover:border-yellow-400/80 transition-all duration-200">
                     <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
                     <div className="absolute inset-1.5 border border-[#ffffff10] rounded-lg" />
+                    
+                    {/* Detalhe do Verso */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                        <div className="w-12 h-12 border border-purple-500/30 rounded-full flex items-center justify-center">
                           <div className="w-8 h-8 border border-purple-500/50 rotate-45" />
@@ -113,13 +114,13 @@ const SelectionStepEx: React.FC<SelectionStepProps> = ({
         </div>
       </div>
 
-      {/* --- SLOTS FIXOS EM 5 --- */}
-      {/* Container Transparente (Sem fundo colorido) */}
+      {/* --- ÁREA DOS SLOTS (FIXA EM 5) --- */}
+      {/* Container Transparente (Sem caixa lilás) */}
       <div className="w-full max-w-4xl border-t border-white/10 p-4 mt-auto z-20">
         
         <div className="flex justify-center gap-3 flex-wrap mb-4">
-          {/* Loop fixo de 5 posições */}
-          {Array.from({ length: MAX_CARDS }).map((_, index) => {
+          {/* HARDCODED: Array de 5 posições. Impossível aparecer 9. */}
+          {Array.from({ length: FIXED_LIMIT }).map((_, index) => {
             const card = selectedCards[index];
             return (
               <div 
@@ -141,20 +142,22 @@ const SelectionStepEx: React.FC<SelectionStepProps> = ({
           })}
         </div>
 
-        {/* Botão VER MESA (Aparece ao completar 5) */}
+        {/* Rodapé com Botões */}
         <div className="flex justify-between items-center">
+          {/* Botão Voltar/Reiniciar */}
           <button 
             onClick={onBack}
             className="flex items-center gap-2 text-slate-400 hover:text-white text-xs transition-colors px-3 py-2 rounded hover:bg-white/5"
           >
-            <RotateCcw size={14} /> Reiniciar
+            <RotateCcw size={14} /> Mudar Opção
           </button>
 
           <span className="text-xs font-mono text-purple-300 bg-purple-900/30 px-3 py-1 rounded-full border border-purple-500/20">
-            {selectedCards.length} / {MAX_CARDS}
+            {selectedCards.length} / {FIXED_LIMIT}
           </span>
 
           <div className="w-24 flex justify-end">
+             {/* Botão Ver Mesa (Aparece ao completar 5) */}
              {isComplete && (
                <motion.button
                  initial={{ scale: 0.8, opacity: 0 }}
