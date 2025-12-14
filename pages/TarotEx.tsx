@@ -11,15 +11,12 @@ import { consumeCredit } from '../services/userService';
 // Componentes
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
-
-// --- IMPORTANTE: Usando o componente específico do EX ---
 import QuestionStepEx from '../components/tarot/QuestionStepEx'; 
-
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import { Sparkles, Send, Loader2 } from 'lucide-react';
 
 const LOCAL_KEY = 'vozes_tarot_ex_state';
-const MAX_CARDS = 5; // Limite de 5 cartas
+const MAX_CARDS = 5; // Limite EXATO de 5 cartas
 
 const TarotEx: React.FC = () => {
   const navigate = useNavigate();
@@ -67,7 +64,7 @@ const TarotEx: React.FC = () => {
 
   // --- SELEÇÃO ---
   const handleCardSelect = (card: CardData) => {
-    if (selectedCards.length >= MAX_CARDS) return;
+    if (selectedCards.length >= MAX_CARDS) return; // Trava se já tem 5
     if (selectedCards.find(c => c.id === card.id)) return;
     
     const newSelection = [...selectedCards, card];
@@ -150,7 +147,7 @@ const TarotEx: React.FC = () => {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
       <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} onSelectPlan={() => setShowPlans(false)} />
 
-      {/* HEADER REMOVIDO CONFORME PEDIDO */}
+      {/* HEADER REMOVIDO: A página agora começa direto no componente de pergunta */}
 
       {step === 'question' && (
         <QuestionStepEx 
@@ -168,11 +165,11 @@ const TarotEx: React.FC = () => {
           hoveredCardId={hoveredCardId}
           setHoveredCardId={setHoveredCardId}
           onCardSelect={handleCardSelect}
-          // Ao completar 5 cartas, o botão "Ver Mesa" aparece (controlado pelo SelectionStep)
+          // Quando clicar em "Ver Mesa", vai para o reveal
           onNext={() => { setRevealedLocal(0); setStep('reveal'); }} 
           onBack={() => setStep('question')}
           isMobile={isMobile}
-          maxCards={MAX_CARDS} // 5
+          maxCards={MAX_CARDS} // MANDA 5
         />
       )}
 
