@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft } from 'lucide-react';
+import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft, RefreshCw } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { CARD_BACK_URL, CARDS_TO_SELECT } from '../../constants';
@@ -39,6 +39,11 @@ const ReadingStep: React.FC<ReadingStepProps> = ({
 }) => {
   
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // --- DETECÇÃO DE ERRO ---
+  const isError = reading?.intro?.includes("Erro") || 
+                  reading?.intro?.includes("falha") || 
+                  reading?.summary?.includes("tente novamente");
 
   const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
@@ -82,6 +87,7 @@ const ReadingStep: React.FC<ReadingStepProps> = ({
           <p className="text-slate-400 italic text-lg md:text-xl">"{question}"</p>
         </div>
 
+        {/* GRID DE CARTAS (Mantido Intacto) */}
         <div className="grid grid-cols-3 gap-2 md:gap-3 max-w-md mx-auto mb-8 w-full">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
@@ -115,58 +121,79 @@ const ReadingStep: React.FC<ReadingStepProps> = ({
               </div>
             ) : (
               <>
-                <div className="bg-slate-900/80 border-l-4 border-gold p-6 rounded-r-xl backdrop-blur-md">
-                  <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-purple-400" /> Análise das Cartas</h3>
-                  <div className="space-y-4">
-                    {reading.individual_cards?.map((item: any, idx: number) => (
-                      <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
-                        <h4 className="text-gold font-bold mb-1 text-sm uppercase tracking-wider">Posição {item.position}: {item.card_name}</h4>
-                        <p className="text-slate-300 text-base leading-relaxed">{item.interpretation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><Clock className="text-purple-400" /> Jornada do Tempo</h3>
-                  <div className="space-y-6">
-                    <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
-                      <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Passado / Base</span>
-                      <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.past}</p>
+                {/* --- LÓGICA DE ERRO IMPLEMENTADA AQUI --- */}
+                {isError ? (
+                    <div className="bg-red-900/40 border-l-4 border-red-500 p-8 rounded-r-xl backdrop-blur-md shadow-2xl text-center max-w-2xl mx-auto">
+                        <div className="mb-4 text-red-300">
+                            <RotateCcw size={40} className="mx-auto mb-2 opacity-80" />
+                            <h3 className="text-2xl text-white font-bold mb-2">Conexão Interrompida</h3>
+                        </div>
+                        <p className="text-slate-200 text-lg mb-6">{reading.intro}</p>
+                        
+                        <button 
+                            onClick={onReveal} // Tenta de novo sem perder as cartas
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-3 mx-auto"
+                        >
+                            <RefreshCw size={24} className={isLoadingAI ? "animate-spin" : ""} />
+                            Tentar Novamente
+                        </button>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 p-6 rounded-2xl border border-gold/40 shadow-lg">
-                      <span className="inline-block px-3 py-1 bg-gold text-purple-900 text-xs font-bold rounded-full mb-3 uppercase">Presente / Foco</span>
-                      <p className="text-white leading-relaxed text-lg">{reading.timeline.present}</p>
-                    </div>
-                    <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
-                      <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Futuro / Tendência</span>
-                      <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.future}</p>
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                    // --- RESULTADO NORMAL (SE NÃO HOUVER ERRO) ---
+                    <>
+                        <div className="bg-slate-900/80 border-l-4 border-gold p-6 rounded-r-xl backdrop-blur-md">
+                        <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
+                        </div>
 
-                <div className="bg-slate-950 border border-gold/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
-                  <div>
-                    <h4 className="text-gold font-playfair text-2xl mb-2">A Resposta do Oráculo</h4>
-                    <p className="text-white text-lg font-medium">{reading.summary}</p>
-                  </div>
-                  <hr className="border-white/10" />
-                  <div>
-                    <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho Final</p>
-                    <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
-                  </div>
-                </div>
+                        <div>
+                        <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-purple-400" /> Análise das Cartas</h3>
+                        <div className="space-y-4">
+                            {reading.individual_cards?.map((item: any, idx: number) => (
+                            <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
+                                <h4 className="text-gold font-bold mb-1 text-sm uppercase tracking-wider">Posição {item.position}: {item.card_name}</h4>
+                                <p className="text-slate-300 text-base leading-relaxed">{item.interpretation}</p>
+                            </div>
+                            ))}
+                        </div>
+                        </div>
+
+                        <div>
+                        <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><Clock className="text-purple-400" /> Jornada do Tempo</h3>
+                        <div className="space-y-6">
+                            <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
+                            <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Passado / Base</span>
+                            <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.past}</p>
+                            </div>
+                            <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 p-6 rounded-2xl border border-gold/40 shadow-lg">
+                            <span className="inline-block px-3 py-1 bg-gold text-purple-900 text-xs font-bold rounded-full mb-3 uppercase">Presente / Foco</span>
+                            <p className="text-white leading-relaxed text-lg">{reading.timeline.present}</p>
+                            </div>
+                            <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10">
+                            <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 text-xs font-bold rounded-full mb-3 uppercase">Futuro / Tendência</span>
+                            <p className="text-slate-200 leading-relaxed text-lg">{reading.timeline.future}</p>
+                            </div>
+                        </div>
+                        </div>
+
+                        <div className="bg-slate-950 border border-gold/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                        <div>
+                            <h4 className="text-gold font-playfair text-2xl mb-2">A Resposta do Oráculo</h4>
+                            <p className="text-white text-lg font-medium">{reading.summary}</p>
+                        </div>
+                        <hr className="border-white/10" />
+                        <div>
+                            <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho Final</p>
+                            <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
+                        </div>
+                        </div>
+                    </>
+                )}
               </>
             )}
           </div>
         )}
       </div>
 
-      {/* BOTÃO REVELAR - Estilo Roxo Sólido -> Amarelo Hover */}
       {revealedLocal === 0 && (
         <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
           <button
@@ -188,8 +215,8 @@ const ReadingStep: React.FC<ReadingStepProps> = ({
         </div>
       )}
 
-      {/* BOTÕES FINAIS */}
-      {revealedLocal === CARDS_TO_SELECT && reading && (
+      {/* BOTÕES FINAIS (SÓ APARECEM SE NÃO HOUVER ERRO) */}
+      {revealedLocal === CARDS_TO_SELECT && reading && !isError && (
         <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20">
           <button 
             onClick={onGoHome} 
