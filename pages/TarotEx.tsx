@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-// IMPORTANTE: Não use mais CARDS_TO_SELECT das constantes globais para a lógica de limite
+// Importamos constantes globais apenas para o tamanho do deck e nomes
 import { DECK_SIZE, CARD_NAMES } from '../constants';
 import { getTarotReading } from '../services/geminiService';
 import { useTarotStore } from '../store/tarotStore';
@@ -13,16 +13,16 @@ import { consumeCredit } from '../services/userService';
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// Componentes das Etapas
-// Usando o seu componente personalizado para o Ex
+// --- COMPONENTES ESPECÍFICOS PARA A TIRADA DO EX ---
+// Aqui garantimos que estamos chamando os arquivos independentes que você criou
 import QuestionStepEx from '../components/tarot/QuestionStepEx'; 
-import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
-import ReadingStep from '../components/tarot/ReadingStep';
+import SelectionStepEx, { CardData } from '../components/tarot/SelectionStepEx'; // <--- Alterado para o arquivo Ex
+import ReadingStepEx from '../components/tarot/ReadingStepEx'; // <--- Alterado para o arquivo Ex
 
 // --- CONFIGURAÇÃO ESPECÍFICA DESTA LEITURA ---
-const READING_TYPE = 'tirada_ex'; // Identificador para salvar no banco
-const CARD_LIMIT = 5; // <--- MUDANÇA PRINCIPAL: Limite específico para esta leitura
-const LOCAL_KEY = 'vozes_tarot_ex_v1'; // Chave diferente para não conflitar com o Templo de Afrodite
+const READING_TYPE = 'tirada_ex'; 
+const CARD_LIMIT = 5; // Limite fixo de 5 cartas
+const LOCAL_KEY = 'vozes_tarot_ex_v1'; 
 
 const TarotEx: React.FC = () => {
   const navigate = useNavigate();
@@ -162,7 +162,6 @@ const TarotEx: React.FC = () => {
   };
 
   const handleCardSelect = (card: CardData) => {
-    // USANDO A NOVA CONSTANTE CARD_LIMIT AQUI
     if (selectedCards.length >= CARD_LIMIT) return;
     if (selectedCards.find(c => c.id === card.id)) return;
     setSelectedCards([...selectedCards, card]);
@@ -203,7 +202,6 @@ const TarotEx: React.FC = () => {
       setRevealedLocal(0);
       setRevealedCount(0);
 
-      // LOOP ADAPTADO PARA O CARD_LIMIT
       for (let i = 1; i <= CARD_LIMIT; i++) {
         if (!mountedRef.current) break;
         await new Promise(res => setTimeout(res, 600));
@@ -216,19 +214,12 @@ const TarotEx: React.FC = () => {
         const userDob = user?.user_metadata?.birth_date || "";
         const cardIds = selectedCards.map(c => c.id);
 
-        // AQUI ESTÁ O TRUQUE: 
-        // Você precisa passar o TIPO DE LEITURA para o seu serviço de AI
-        // Se a função getTarotReading não aceita o tipo, precisaremos alterá-la.
-        // Por enquanto, vou passar o READING_TYPE concatenado na pergunta ou como parâmetro extra se sua função suportar.
-        
-        // Exemplo: Passando o contexto na própria string de pergunta para a AI entender
         const contextQuestion = `[MÉTODO: TIRADA DO EX (5 CARTAS)] ${question}`;
         
         const result = await getTarotReading(contextQuestion, cardIds, userName, userDob);
         setReading(result);
 
         if (user) {
-          // Salvando com o tipo correto
           await saveReading(user.id, READING_TYPE, { question, cardIds }, result);
         }
 
@@ -273,7 +264,6 @@ const TarotEx: React.FC = () => {
       />
 
       {step === 'question' && (
-        // Usando o componente customizado do EX
         <QuestionStepEx 
           question={question}
           setQuestion={setQuestion}
@@ -283,7 +273,8 @@ const TarotEx: React.FC = () => {
       )}
 
       {step === 'selection' && (
-        <SelectionStep 
+        // Usando o componente SelectionStepEx que tem os slots dinâmicos
+        <SelectionStepEx 
           availableCards={availableCards}
           selectedCards={selectedCards}
           hoveredCardId={hoveredCardId}
@@ -292,13 +283,13 @@ const TarotEx: React.FC = () => {
           onNext={handleGoToReveal}
           onBack={handleStepBack}
           isMobile={isMobile}
-          // ADICIONE ESTA PROP AO SELECTION STEP SE AINDA NÃO TIVER
           limit={CARD_LIMIT} 
         />
       )}
 
       {(step === 'reveal' || step === 'result') && (
-        <ReadingStep 
+        // Usando o componente ReadingStepEx que terá o layout específico de 5 cartas
+        <ReadingStepEx 
           question={question}
           selectedCards={selectedCards}
           revealedLocal={revealedLocal}
@@ -309,8 +300,6 @@ const TarotEx: React.FC = () => {
           onBack={handleStepBack}
           onGoHome={() => { handleNewReading(); navigate('/'); }}
           onNewReading={handleNewReading}
-          // PASSE O TIPO DE LAYOUT PARA O READING STEP SABER COMO DESENHAR AS 5 CARTAS
-          layoutType="pentagram" // ou "linear", ou "cross" - precisaremos ajustar o CSS do ReadingStep
         />
       )}
 
