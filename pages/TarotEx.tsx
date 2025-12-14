@@ -12,11 +12,12 @@ import { consumeCredit } from '../services/userService';
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 import QuestionStepEx from '../components/tarot/QuestionStepEx'; 
-import SelectionStepEx, { CardData } from '../components/tarot/SelectionStepEx';
+// IMPORTANTE: Importar o componente EXCLUSIVO que acabamos de criar
+import SelectionStepEx from '../components/tarot/SelectionStepEx';
 import { Sparkles, Send, Loader2 } from 'lucide-react';
 
 const LOCAL_KEY = 'vozes_tarot_ex_state';
-const MAX_CARDS = 5; // Limite EXATO de 5 cartas
+const MAX_CARDS = 5; 
 
 const TarotEx: React.FC = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ const TarotEx: React.FC = () => {
 
   // --- SELEÇÃO ---
   const handleCardSelect = (card: CardData) => {
-    if (selectedCards.length >= MAX_CARDS) return; // Trava se já tem 5
+    if (selectedCards.length >= MAX_CARDS) return;
     if (selectedCards.find(c => c.id === card.id)) return;
     
     const newSelection = [...selectedCards, card];
@@ -101,7 +102,7 @@ const TarotEx: React.FC = () => {
     } catch (err) { alert("Erro na conexão."); } finally { setLoadingAI(false); }
   };
 
-  // --- LAYOUT DA MESA (Boneco) ---
+  // --- LAYOUT DA MESA ---
   const renderExLayout = () => {
     const renderSlot = (index: number) => {
         const card = selectedCards[index];
@@ -147,7 +148,7 @@ const TarotEx: React.FC = () => {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />
       <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} onSelectPlan={() => setShowPlans(false)} />
 
-      {/* HEADER REMOVIDO: A página agora começa direto no componente de pergunta */}
+      {/* SEM HEADER NO TOPO */}
 
       {step === 'question' && (
         <QuestionStepEx 
@@ -158,19 +159,21 @@ const TarotEx: React.FC = () => {
         />
       )}
       
-     {step === 'selection' && (
-  <SelectionStepEx // <--- Usando o componente Exclusivo
-    availableCards={availableCards}
-    selectedCards={selectedCards}
-    hoveredCardId={hoveredCardId}
-    setHoveredCardId={setHoveredCardId}
-    onCardSelect={handleCardSelect}
-    onNext={() => { setRevealedLocal(0); setStep('reveal'); }} 
-    onBack={() => setStep('question')}
-    isMobile={isMobile}
-    // Não precisa passar maxCards, ele já sabe que é 5
-  />
-)}
+      {step === 'selection' && (
+        <SelectionStepEx // <--- AQUI ESTÁ A MÁGICA: Componente Dedicado
+          availableCards={availableCards}
+          selectedCards={selectedCards}
+          hoveredCardId={hoveredCardId}
+          setHoveredCardId={setHoveredCardId}
+          onCardSelect={handleCardSelect}
+          // Quando clicar em "Ver Mesa", vai para o reveal
+          onNext={() => { setRevealedLocal(0); setStep('reveal'); }} 
+          // O botão "Mudar Opção" dentro do SelectionStepEx vai chamar isso
+          onBack={() => navigate('/nova-leitura')}
+          isMobile={isMobile}
+        />
+      )}
+
       {(step === 'reveal' || step === 'result') && (
         <div className="w-full flex flex-col items-center">
             <h2 className="text-2xl font-serif text-white mb-4 text-center">{step === 'reveal' ? 'Revelando a Mesa...' : 'Interpretação'}</h2>
