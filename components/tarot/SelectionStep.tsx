@@ -1,177 +1,127 @@
-import React, { useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, RotateCcw } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { 
+  ArrowLeft, Sparkles, Heart, Calendar, HelpCircle, 
+  Eye, RefreshCw, MessageCircle, GitBranch, Anchor 
+} from 'lucide-react';
+import { SPREADS } from '../config/spreads';
 
-export interface CardData {
-  id: number;
-  name: string;
-  imageUrl: string;
-}
+const SelectSpread: React.FC = () => {
+  const navigate = useNavigate();
 
-interface SelectionStepProps {
-  availableCards: CardData[];
-  selectedCards: CardData[];
-  hoveredCardId: number | null;
-  setHoveredCardId: (id: number | null) => void;
-  onCardSelect: (card: CardData) => void;
-  onNext: () => void;
-  onBack: () => void;
-  isMobile: boolean;
-  maxCards: number; // Recebe o número correto (5, 7, etc)
-}
+  // --- SEGURANÇA: SE A LISTA ESTIVER VAZIA, NÃO QUEBRA O SITE ---
+  if (!SPREADS || !Array.isArray(SPREADS) || SPREADS.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center">
+        <p className="text-slate-400">Carregando métodos de leitura...</p>
+      </div>
+    );
+  }
 
-const SelectionStep: React.FC<SelectionStepProps> = ({
-  availableCards,
-  selectedCards,
-  hoveredCardId,
-  setHoveredCardId,
-  onCardSelect,
-  onNext,
-  onBack,
-  isMobile,
-  maxCards
-}) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Centraliza o leque ao carregar
-  useEffect(() => {
-    if (scrollRef.current) {
-      const scrollWidth = scrollRef.current.scrollWidth;
-      const clientWidth = scrollRef.current.clientWidth;
-      scrollRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
+  // --- ROTEAMENTO INTELIGENTE: Manda para a página correta ---
+  const handleSelect = (spreadId: string) => {
+    switch (spreadId) {
+      case 'ex':
+        navigate('/tarot-ex'); // Vai para TarotEx.tsx (5 cartas)
+        break;
+      case 'vale_pena':
+        navigate('/tarot-vale-pena'); // Vai para TarotValePena.tsx
+        break;
+      case 'mensal':
+        navigate('/tarot-mensal'); // Vai para TarotMensal.tsx
+        break;
+      case 'ferradura':
+        navigate('/tarot-ferradura'); // Vai para TarotFerradura.tsx
+        break;
+      case 'amor_fofoca':
+        navigate('/tarot-fofoca'); // Vai para TarotFofoca.tsx
+        break;
+      case 'ficar_partir':
+        navigate('/tarot-ficar-partir'); // Vai para TarotFicarPartir.tsx
+        break;
+      case 'templo_afrodite':
+      default:
+        navigate('/tarot'); // O padrão continua sendo o de 9 cartas (Tarot.tsx)
+        break;
     }
-  }, []);
+  };
 
-  const isComplete = selectedCards.length === maxCards;
+  const getIcon = (id: string) => {
+    switch (id) {
+      case 'templo_afrodite': return <Sparkles className="text-purple-400" size={24} />;
+      case 'amor_fofoca': return <MessageCircle className="text-pink-500" size={24} />;
+      case 'ex': return <RefreshCw className="text-red-400" size={24} />;
+      case 'mensal': return <Calendar className="text-blue-400" size={24} />;
+      case 'vale_pena': return <HelpCircle className="text-yellow-400" size={24} />;
+      case 'ferradura': return <Anchor className="text-indigo-400" size={24} />;
+      case 'ficar_partir': return <GitBranch className="text-green-400" size={24} />;
+      default: return <Sparkles className="text-white" size={24} />;
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center w-full h-full relative">
-      
-      {/* Título */}
-      <div className="text-center mb-2 z-10">
-        <h2 className="text-2xl font-serif text-white">
-          Escolha {maxCards} Cartas
-        </h2>
-        <p className="text-slate-400 text-xs animate-pulse">Siga sua intuição</p>
-      </div>
-
-      {/* --- LEQUE DE CARTAS (LÓGICA ORIGINAL RESTAURADA) --- */}
-      <div 
-        ref={scrollRef}
-        className="w-full flex-1 flex items-center overflow-x-auto py-10 px-4 custom-scrollbar select-none"
-        style={{ perspective: '1000px', overflowY: 'hidden' }}
-      >
-        <div className="flex mx-auto min-w-max px-[10vw] items-center justify-center h-[350px]">
-          <AnimatePresence>
-            {availableCards.map((card, index) => {
-              // MATEMÁTICA DO ARCO PERFEITO (Restaurada)
-              const total = availableCards.length;
-              const mid = total / 2;
-              const offset = index - mid;
-              
-              // Ajustes finos para o arco parecer natural
-              const rotate = offset * 3; // Grau de rotação
-              const yOffset = Math.abs(offset) * 3; // Curva vertical (sobe nas pontas ou desce no meio)
-              const xOffset = offset * -20; // Sobreposição lateral (negativo junta as cartas)
-
-              return (
-                <motion.div
-                  key={card.id}
-                  layoutId={`card-${card.id}`}
-                  initial={{ opacity: 0, y: 200 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: yOffset, // Curva
-                    x: xOffset, // Sobreposição
-                    rotate: rotate, // Rotação em leque
-                    scale: hoveredCardId === card.id ? 1.15 : 1,
-                    zIndex: hoveredCardId === card.id ? 100 : index
-                  }}
-                  exit={{ opacity: 0, scale: 0 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                  className="relative cursor-pointer transform-style-3d origin-bottom"
-                  style={{ 
-                    transformOrigin: '50% 150%' // O PULO DO GATO: Rotaciona a partir de um ponto imaginário abaixo
-                  }}
-                  onMouseEnter={() => setHoveredCardId(card.id)}
-                  onMouseLeave={() => setHoveredCardId(null)}
-                  onClick={() => onCardSelect(card)}
-                >
-                  {/* Visual da Carta (Verso Místico) */}
-                  <div className="w-24 h-40 md:w-32 md:h-52 rounded-xl bg-gradient-to-b from-[#1a1a2e] to-[#16213e] border border-[#ffffff20] shadow-2xl group-hover:border-yellow-400/80 group-hover:shadow-[0_0_25px_rgba(250,204,21,0.4)] transition-all duration-200">
-                    <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
-                    <div className="absolute inset-1.5 border border-[#ffffff10] rounded-lg" />
-                    
-                    {/* Detalhe central */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                       <div className="w-12 h-12 border border-purple-500/30 rounded-full flex items-center justify-center">
-                          <div className="w-8 h-8 border border-purple-500/50 rotate-45" />
-                       </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* --- SLOTS (TRANSPARENTES E DINÂMICOS) --- */}
-      <div className="w-full max-w-4xl border-t border-white/10 p-4 mt-auto z-20">
+    <div className="min-h-screen bg-[#050505] text-white p-4 pb-20">
+      <div className="max-w-6xl mx-auto">
         
-        <div className="flex justify-center gap-2 md:gap-3 flex-wrap mb-4">
-          {Array.from({ length: maxCards }).map((_, index) => {
-            const card = selectedCards[index];
-            return (
-              <div 
-                key={index}
-                className="w-10 h-16 md:w-14 md:h-20 rounded border border-dashed border-white/20 bg-white/5 flex items-center justify-center relative overflow-hidden"
-              >
-                {card ? (
-                  <motion.img 
-                    src={card.imageUrl} 
-                    className="w-full h-full object-cover"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  />
-                ) : (
-                  <span className="text-white/20 text-[10px] font-bold">{index + 1}</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Barra de Ações */}
-        <div className="flex justify-between items-center">
-          <button 
-            onClick={onBack}
-            className="flex items-center gap-2 text-slate-400 hover:text-white text-xs transition-colors px-3 py-2 rounded hover:bg-white/5"
-          >
-            <RotateCcw size={14} /> Reiniciar
+        {/* Header com botão VOLTAR para HOME ('/') */}
+        <div className="flex items-center gap-4 mb-8 pt-4">
+          <button onClick={() => navigate('/')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <ArrowLeft size={24} />
           </button>
-
-          <span className="text-xs font-mono text-purple-300 bg-purple-900/30 px-3 py-1 rounded-full border border-purple-500/20">
-            {selectedCards.length} / {maxCards}
-          </span>
-
-          <div className="w-24 flex justify-end">
-             {isComplete && (
-               <motion.button
-                 initial={{ scale: 0.8, opacity: 0 }}
-                 animate={{ scale: 1, opacity: 1 }}
-                 onClick={onNext}
-                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-full font-bold text-xs shadow-lg shadow-green-900/30 animate-pulse"
-               >
-                 Ver Mesa <ArrowRight size={14} />
-               </motion.button>
-             )}
+          <div>
+            <h1 className="text-2xl font-serif text-white">Escolha sua Leitura</h1>
+            <p className="text-slate-400 text-sm">Qual resposta você busca hoje?</p>
           </div>
         </div>
-      </div>
 
+        {/* Grid de Opções */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {SPREADS.map((spread, index) => (
+            <motion.div
+              key={spread.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => handleSelect(spread.id)}
+              className="bg-[#121214] border border-white/5 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-white/5 transition-all group relative overflow-hidden flex flex-col justify-between h-full min-h-[180px]"
+            >
+              {/* Highlight para jogos Premium (muitas cartas) */}
+              {spread.cardsCount >= 12 && (
+                <div className="absolute top-0 right-0 bg-pink-900/50 text-pink-200 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-pink-500/20">
+                  PREMIUM
+                </div>
+              )}
+
+              <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-white/5 rounded-xl group-hover:scale-110 transition-transform duration-300 border border-white/5">
+                    {getIcon(spread.id)}
+                  </div>
+                  <span className="text-xs font-mono text-slate-500 bg-black/40 px-2 py-1 rounded border border-white/5">
+                    {spread.cardsCount} Cartas
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
+                  {spread.title}
+                </h3>
+                <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
+                  {spread.description}
+                </p>
+              </div>
+
+              <div className="w-full pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-500 group-hover:text-purple-300 transition-colors mt-auto">
+                <span>Jogar agora</span>
+                <ArrowLeft className="rotate-180 w-4 h-4" />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+      </div>
     </div>
   );
 };
 
-export default SelectionStep;
+export default SelectSpread;
