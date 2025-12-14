@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft } from 'lucide-react';
+import { Sparkles, RotateCcw, Loader2, BookOpen, Clock, Download, Home, ArrowLeft, RefreshCw } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { CARD_BACK_URL } from '../../constants';
@@ -40,6 +40,12 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
   const resultRef = useRef<HTMLDivElement>(null);
   const totalCards = selectedCards.length;
 
+  // --- DETECÇÃO DE ERRO ---
+  // Verifica se a resposta da IA contém palavras chave de erro
+  const isError = reading?.intro?.includes("Erro") || 
+                  reading?.intro?.includes("falha") || 
+                  reading?.summary?.includes("tente novamente");
+
   const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
     const btnText = document.getElementById('btn-pdf-text');
@@ -59,17 +65,15 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
     }
   };
 
-  // --- LAYOUT FICAR OU PARTIR (6 CARTAS) ---
-  // Ref: Image d05119f0.jpg
-  // Grid de 3 Colunas: Esquerda (1,3) | Centro (5,6) | Direita (2,4)
+  // LAYOUT DA MESA (6 CARTAS) - Estilo Coração Partido
   const getCardStyle = (index: number) => {
     switch (index) {
       case 0: return "col-start-1 row-start-1"; // 1: Situação Atual (Topo Esq)
       case 1: return "col-start-3 row-start-1"; // 2: Por que ficar? (Topo Dir)
       case 2: return "col-start-1 row-start-2"; // 3: Por que partir? (Baixo Esq)
-      case 3: return "col-start-3 row-start-2"; // 4: Sentimento ao Ficar (Baixo Dir)
-      case 4: return "col-start-2 row-start-1 translate-y-8"; // 5: Sentimento ao Partir (Centro Topo - Deslocado para baixo visualmente)
-      case 5: return "col-start-2 row-start-2"; // 6: Tendência/Conselho (Centro Baixo)
+      case 3: return "col-start-3 row-start-2"; // 4: Sentimento Ficar (Baixo Dir)
+      case 4: return "col-start-2 row-start-1 translate-y-8"; // 5: Sentimento Partir (Centro Topo)
+      case 5: return "col-start-2 row-start-2"; // 6: Conselho (Centro Baixo)
       default: return "";
     }
   };
@@ -85,7 +89,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
         </div>
 
         {/* GRID ESPECÍFICO 3 COLUNAS x 2 LINHAS */}
-        <div className="grid grid-cols-3 gap-x-6 gap-y-4 max-w-xl mx-auto mb-12 w-full relative perspective-1000 py-4 justify-items-center">
+        <div className="grid grid-cols-3 gap-x-3 gap-y-4 max-w-lg mx-auto mb-10 w-full relative perspective-1000 py-4 justify-items-center">
           {selectedCards.map((card, index) => {
             const isRevealed = index < revealedLocal;
             const customClass = getCardStyle(index);
@@ -98,7 +102,7 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
             return (
               <div key={card.id} className={`w-20 md:w-24 aspect-[2/3] relative group ${customClass}`}>
                 
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white/30 font-serif text-sm font-bold">
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-fuchsia-300/50 font-serif text-xs font-bold">
                     {index + 1}
                 </div>
 
@@ -117,51 +121,74 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
           })}
         </div>
 
-        {/* ÁREA DE RESULTADO */}
+        {/* ÁREA DE RESULTADO OU MENSAGEM DE ERRO */}
         {revealedLocal === totalCards && (
           <div className="w-full animate-fade-in-up space-y-8 pb-8">
             {isLoadingAI || !reading ? (
               <div className="bg-slate-900/50 border border-fuchsia-500/20 p-10 rounded-2xl text-center backdrop-blur-md">
                 <Loader2 className="w-12 h-12 text-fuchsia-500 animate-spin mx-auto mb-4" />
-                <p className="text-purple-200 text-xl font-playfair">Comparando os caminhos...</p>
+                <p className="text-purple-200 text-lg font-playfair">Consultando os oráculos...</p>
               </div>
             ) : (
               <>
-                <div className="bg-slate-900/80 border-l-4 border-fuchsia-500 p-6 rounded-r-xl backdrop-blur-md">
-                  <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
-                </div>
+                {/* BLOC0 DE ERRO COM BOTÃO DE RETRY */}
+                {isError ? (
+                    <div className="bg-red-900/40 border-l-4 border-red-500 p-8 rounded-r-xl backdrop-blur-md shadow-2xl text-center max-w-2xl mx-auto">
+                        <div className="mb-4 text-red-300">
+                            <RotateCcw size={40} className="mx-auto mb-2 opacity-80" />
+                            <h3 className="text-2xl text-white font-bold mb-2">Conexão Interrompida</h3>
+                        </div>
+                        <p className="text-slate-200 text-lg mb-6">{reading.intro || "Não foi possível completar a interpretação."}</p>
+                        
+                        <button 
+                            onClick={onReveal} // Isso chama a função de revelar novamente (Tentar de novo)
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-red-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-3 mx-auto"
+                        >
+                            <RefreshCw size={24} className={isLoadingAI ? "animate-spin" : ""} />
+                            Tentar Novamente
+                        </button>
+                        <p className="text-slate-400 text-sm mt-4">Não se preocupe, suas cartas continuam na mesa.</p>
+                    </div>
+                ) : (
+                    // RESULTADO NORMAL (SUCESSO)
+                    <>
+                        <div className="bg-slate-900/80 border-l-4 border-fuchsia-500 p-6 rounded-r-xl backdrop-blur-md">
+                        <p className="text-lg text-purple-100 italic font-light leading-relaxed">{reading.intro}</p>
+                        </div>
 
-                <div>
-                  <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-fuchsia-400" /> Comparativo</h3>
-                  
-                  {/* Grid 2 colunas para comparar lado a lado */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {reading.individual_cards?.map((item: any, idx: number) => (
-                      <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors">
-                        <h4 className="text-fuchsia-400 font-bold mb-1 text-sm uppercase tracking-wider">Posição {idx + 1}: {item.card_name}</h4>
-                        <p className="text-slate-300 text-base leading-relaxed">{item.interpretation || item.meaning}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                        <div>
+                        <h3 className="text-2xl text-white font-playfair mb-6 flex items-center gap-2"><BookOpen className="text-fuchsia-400" /> Comparativo</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {reading.individual_cards?.map((item: any, idx: number) => (
+                            <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors">
+                                <h4 className="text-fuchsia-400 font-bold mb-1 text-sm uppercase tracking-wider">Posição {idx + 1}: {item.card_name}</h4>
+                                <p className="text-slate-300 text-base leading-relaxed">{item.interpretation || item.meaning}</p>
+                            </div>
+                            ))}
+                        </div>
+                        </div>
 
-                <div className="bg-slate-950 border border-fuchsia-500/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
-                  <div>
-                    <h4 className="text-fuchsia-400 font-playfair text-2xl mb-2">Conclusão</h4>
-                    <p className="text-white text-lg font-medium">{reading.summary}</p>
-                  </div>
-                  <hr className="border-white/10" />
-                  <div>
-                    <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho</p>
-                    <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
-                  </div>
-                </div>
+                        <div className="bg-slate-950 border border-fuchsia-500/20 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                        <div>
+                            <h4 className="text-fuchsia-400 font-playfair text-2xl mb-2">Veredito</h4>
+                            <p className="text-white text-lg font-medium">{reading.summary}</p>
+                        </div>
+                        <hr className="border-white/10" />
+                        <div>
+                            <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">Conselho</p>
+                            <p className="text-purple-200 italic text-xl font-serif">"{reading.advice}"</p>
+                        </div>
+                        </div>
+                    </>
+                )}
               </>
             )}
           </div>
         )}
       </div>
 
+      {/* BOTÃO REVELAR (APENAS INÍCIO) */}
       {revealedLocal === 0 && (
         <div className="w-full flex flex-col items-center justify-center mt-2 mb-8 gap-4">
           <button
@@ -183,8 +210,9 @@ const ReadingStepFicarPartir: React.FC<ReadingStepFicarPartirProps> = ({
         </div>
       )}
 
-      {revealedLocal === totalCards && reading && (
-        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20">
+      {/* BOTÕES DE NAVEGAÇÃO FINAL (Só aparecem se NÃO for erro) */}
+      {revealedLocal === totalCards && reading && !isError && (
+        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center pb-20 mt-4">
           <button onClick={onGoHome} className="flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-slate-300 hover:bg-white/10 transition-all font-semibold">
             <Home className="w-5 h-5" /> Voltar ao Início
           </button>
