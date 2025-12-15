@@ -123,6 +123,7 @@ export const getTarotReading = async (
   // 1. Identifica o método através da tag na pergunta
   let spreadType = 'padrao';
   if (question.includes("TIRADA DO EX")) spreadType = 'tirada_ex';
+  else if (question.includes("CARTA DO DIA")) spreadType = 'carta_do_dia';
   else if (question.includes("PREVISÃO MENSAL")) spreadType = 'metodo_mensal';
   else if (question.includes("ELE(A) VALE A PENA")) spreadType = 'vale_a_pena';
   else if (question.includes("FICAR OU PARTIR")) spreadType = 'ficar_ou_partir';
