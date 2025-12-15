@@ -17,6 +17,11 @@ const SPREAD_DEFINITIONS: Record<string, string[]> = {
     "4. Possível futuro entre nós",
     "5. Conselho do oráculo"
   ],
+// CARTA DO DIA:
+  'carta_do_dia': [
+    "1. Conselho Energético para o Hoje (Foco, Desafio e Oportunidade)"
+  ],
+  
   'metodo_mensal': [
     "1. A energia principal do mês",
     "2. O aspecto positivo (o que ajuda)",
