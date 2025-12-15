@@ -153,7 +153,7 @@ const TarotFofoca: React.FC = () => {
   const handleStepBack = () => {
     if (step === 'question') {
       handleNewReading();
-      navigate('/');
+      navigate('/nova-leitura');
     } else if (step === 'selection') {
       setQuestion(''); 
       setSelectedCards([]); 
@@ -310,3 +310,4 @@ const TarotFofoca: React.FC = () => {
 };
 
 export default TarotFofoca;
+
