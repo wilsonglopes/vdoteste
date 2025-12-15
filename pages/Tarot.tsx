@@ -8,11 +8,11 @@ import { useTarotStore } from '../store/tarotStore';
 import { saveReading } from '../services/historyService';
 import { consumeCredit } from '../services/userService';
 
-// Componentes Modais
+// Modais
 import PlansModal from '../components/PlansModal';
 import AuthModal from '../components/AuthModal';
 
-// Componentes das Etapas
+// Etapas
 import QuestionStep from '../components/tarot/QuestionStep';
 import SelectionStep, { CardData } from '../components/tarot/SelectionStep';
 import ReadingStep from '../components/tarot/ReadingStep';
@@ -22,7 +22,7 @@ const LOCAL_KEY = 'vozes_tarot_state_v1';
 const Tarot: React.FC = () => {
   const navigate = useNavigate();
 
-  // --- STORE GLOBAL ---
+  // STORE GLOBAL
   const {
     step, setStep,
     question, setQuestion,
@@ -33,39 +33,20 @@ const Tarot: React.FC = () => {
     resetTarot
   } = useTarotStore();
 
-  // --- ESTADOS LOCAIS ---
+  // ESTADOS LOCAIS
   const [deck, setDeck] = useState<CardData[]>([]);
   const [availableCards, setAvailableCards] = useState<CardData[]>([]);
   const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
-   
   const [revealedLocal, setRevealedLocal] = useState<number>(revealedCount || 0);
-   
   const [showPlans, setShowPlans] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
-  const abortRevealRef = useRef({ aborted: false });
   const mountedRef = useRef(true);
+  const revealingRef = useRef(false);
 
-  // --- 1. INICIALIZAÇÃO E SETUP ---
-
-  const handleNewReading = () => {
-    abortRevealRef.current.aborted = true;
-    if (typeof resetTarot === 'function') resetTarot();
-    abortRevealRef.current.aborted = false;
-    
-    setHoveredCardId(null);
-    setQuestion(''); 
-    setSelectedCards([]); 
-    setRevealedCount(0);
-    setRevealedLocal(0);
-    setReading(null);
-    setLoadingAI(false);
-    
-    initializeDeck();
-    try { localStorage.removeItem(LOCAL_KEY); } catch (e) {}
-  };
+  // ================= INITIALIZAÇÃO =================
 
   const initializeDeck = () => {
     const fullDeck: CardData[] = [];
@@ -78,22 +59,30 @@ const Tarot: React.FC = () => {
     }
     const shuffled = [...fullDeck].sort(() => Math.random() - 0.5);
     setDeck(shuffled);
-    const filtered = shuffled.filter(c => !selectedCards.find(s => s.id === c.id));
-    setAvailableCards(filtered);
+    setAvailableCards(shuffled.filter(c => !selectedCards.find(s => s.id === c.id)));
+  };
+
+  const handleNewReading = () => {
+    resetTarot();
+    setHoveredCardId(null);
+    setRevealedLocal(0);
+    setLoadingAI(false);
+    initializeDeck();
+    try { localStorage.removeItem(LOCAL_KEY); } catch {}
   };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
     };
-    checkUser();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    loadUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user || null);
     });
 
@@ -113,48 +102,45 @@ const Tarot: React.FC = () => {
         }
         if (parsed.reading) setReading(parsed.reading);
       }
-    } catch (e) { }
+    } catch {}
 
-    return () => { 
-      mountedRef.current = false; 
+    return () => {
+      mountedRef.current = false;
       window.removeEventListener('resize', checkMobile);
-      subscription.unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
-    const toStore = { question, selectedCards, step, revealedCount: revealedLocal, reading, isLoadingAI };
-    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(toStore)); } catch (e) {}
-  }, [question, selectedCards, step, revealedLocal, reading, isLoadingAI]);
+    const state = { question, selectedCards, step, revealedCount: revealedLocal, reading };
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); } catch {}
+  }, [question, selectedCards, step, revealedLocal, reading]);
 
   useEffect(() => {
-    if (!deck || deck.length === 0) return;
-    const filtered = deck.filter(c => !selectedCards.find(s => s.id === c.id));
-    setAvailableCards(filtered);
+    if (!deck.length) return;
+    setAvailableCards(deck.filter(c => !selectedCards.find(s => s.id === c.id)));
   }, [selectedCards, deck]);
 
-  useEffect(() => {
-    if (typeof revealedCount === 'number') setRevealedLocal(revealedCount);
-  }, [revealedCount]);
-
-  // --- 2. NAVEGAÇÃO ---
+  // ================= NAVEGAÇÃO (CORRIGIDA) =================
 
   const handleStepBack = () => {
     if (step === 'question') {
-      // Small delay to ensure navigation starts before state reset could interfere
-      setTimeout(() => {
-          handleNewReading();
-      }, 100);
       navigate('/nova-leitura');
-    } else if (step === 'selection') {
-      setQuestion(''); 
-      setSelectedCards([]); 
+      return;
+    }
+
+    if (step === 'selection') {
+      setQuestion('');
+      setSelectedCards([]);
       setStep('question');
-    } else if (step === 'reveal') {
-      setSelectedCards([]); 
+      return;
+    }
+
+    if (step === 'reveal') {
+      setSelectedCards([]);
       setRevealedLocal(0);
       setRevealedCount(0);
-      initializeDeck(); 
+      initializeDeck();
       setStep('selection');
     }
   };
@@ -171,25 +157,21 @@ const Tarot: React.FC = () => {
     setStep('reveal');
   };
 
-  // --- 3. LÓGICA DE REVELAÇÃO ---
-  const revealingRef = useRef(false);
+  // ================= REVELAÇÃO =================
 
   const startReveal = async () => {
     if (revealingRef.current) return;
-    
+
     if (!user) {
       setShowAuth(true);
       return;
     }
 
     const creditCheck = await consumeCredit(user.id);
-
     if (!creditCheck.success) {
-      if (creditCheck.message === 'no_credits') {
-        setShowPlans(true);
-      } else {
-        alert(creditCheck.message || "Erro ao verificar créditos.");
-      }
+      creditCheck.message === 'no_credits'
+        ? setShowPlans(true)
+        : alert(creditCheck.message);
       return;
     }
 
@@ -197,9 +179,6 @@ const Tarot: React.FC = () => {
 
     try {
       setLoadingAI(true);
-      setRevealedLocal(0);
-      setRevealedCount(0);
-
       for (let i = 1; i <= CARDS_TO_SELECT; i++) {
         if (!mountedRef.current) break;
         await new Promise(res => setTimeout(res, 600));
@@ -207,60 +186,39 @@ const Tarot: React.FC = () => {
         setRevealedCount(i);
       }
 
-      try {
-        const userName = user?.user_metadata?.name || "Viajante";
-        const userDob = user?.user_metadata?.birth_date || "";
-        const cardIds = selectedCards.map(c => c.id);
+      const result = await getTarotReading(
+        question,
+        selectedCards.map(c => c.id),
+        user?.user_metadata?.name || 'Viajante',
+        user?.user_metadata?.birth_date || ''
+      );
 
-        const result = await getTarotReading(question, cardIds, userName, userDob);
-        setReading(result);
+      setReading(result);
+      await saveReading(user.id, 'tarot', { question }, result);
 
-        if (user) {
-          await saveReading(user.id, 'tarot', { question, cardIds }, result);
-        }
-
-      } catch (err) {
-        console.error('[tarot] ai call failed', err);
-        setReading({
-          intro: "Erro na consulta ao oráculo.",
-          timeline: { past: "", present: "", future: "" },
-          individual_cards: [],
-          summary: "Tente novamente.",
-          advice: "Verifique sua conexão com a internet."
-        });
-      }
-
+    } catch {
+      setReading({
+        intro: 'Erro na consulta.',
+        timeline: { past: '', present: '', future: '' },
+        individual_cards: [],
+        summary: 'Tente novamente.',
+        advice: 'Verifique sua conexão.'
+      });
     } finally {
       setLoadingAI(false);
       revealingRef.current = false;
     }
   };
 
-  // --- 4. RENDERIZAÇÃO ---
+  // ================= RENDER =================
+
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4 w-full flex flex-col items-center relative overflow-x-hidden scrollbar-hide">
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-      
-      <AuthModal 
-        isOpen={showAuth} 
-        onClose={() => setShowAuth(false)} 
-        onSuccess={() => setShowAuth(false)} 
-      />
-      
-      <PlansModal 
-        isOpen={showPlans} 
-        onClose={() => setShowPlans(false)}
-        onSelectPlan={(planId) => {
-          alert(`Plano ${planId} selecionado (Pagamento em breve).`);
-          setShowPlans(false);
-        }}
-      />
+    <div className="max-w-4xl mx-auto py-6 px-4 w-full flex flex-col items-center">
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+      <PlansModal isOpen={showPlans} onClose={() => setShowPlans(false)} />
 
       {step === 'question' && (
-        <QuestionStep 
+        <QuestionStep
           question={question}
           setQuestion={setQuestion}
           onNext={() => setStep('selection')}
@@ -269,7 +227,7 @@ const Tarot: React.FC = () => {
       )}
 
       {step === 'selection' && (
-        <SelectionStep 
+        <SelectionStep
           availableCards={availableCards}
           selectedCards={selectedCards}
           hoveredCardId={hoveredCardId}
@@ -282,7 +240,7 @@ const Tarot: React.FC = () => {
       )}
 
       {(step === 'reveal' || step === 'result') && (
-        <ReadingStep 
+        <ReadingStep
           question={question}
           selectedCards={selectedCards}
           revealedLocal={revealedLocal}
@@ -291,11 +249,13 @@ const Tarot: React.FC = () => {
           user={user}
           onReveal={startReveal}
           onBack={handleStepBack}
-          onGoHome={() => { handleNewReading(); navigate('/'); }}
+          onGoHome={() => {
+            handleNewReading();
+            navigate('/');
+          }}
           onNewReading={handleNewReading}
         />
       )}
-
     </div>
   );
 };
