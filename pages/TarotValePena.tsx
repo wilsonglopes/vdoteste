@@ -165,7 +165,7 @@ const TarotValePena: React.FC = () => {
   const handleStepBack = () => {
     if (step === 'question') {
       handleNewReading();
-      navigate('/');
+      navigate('/nova-leitura');
     } else if (step === 'selection') {
       setQuestion(''); 
       setSelectedCards([]); 
@@ -328,3 +328,4 @@ const TarotValePena: React.FC = () => {
 };
 
 export default TarotValePena;
+
