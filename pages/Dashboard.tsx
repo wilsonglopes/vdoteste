@@ -1,8 +1,7 @@
-// pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { User, Star, History, Calendar, Phone, Mail, Sparkles, LogOut, Plus, ChevronRight, Edit2, PlayCircle } from 'lucide-react';
+import { User, Star, History, Calendar, Phone, Mail, Sparkles, LogOut, Plus, ChevronRight, Edit2, PlayCircle, Moon, HeartCrack, MessageCircle, Anchor, Split, HelpCircle } from 'lucide-react';
 import PlansModal from '../components/PlansModal';
 import ReadingModal from '../components/ReadingModal';
 import EditProfileModal from '../components/EditProfileModal';
@@ -19,10 +18,11 @@ interface UserProfile {
 
 interface Reading {
   id: string;
-  type: 'tarot' | 'dream';
+  type: string; // Alterado para string genérica para aceitar todos os tipos
   created_at: string;
   input_data: any;
-  ai_response: any;
+  output_data: any; // Ajustado para bater com o historyService
+  ai_response?: any; // Mantido para compatibilidade com registros antigos
 }
 
 const Dashboard: React.FC = () => {
@@ -69,7 +69,14 @@ const Dashboard: React.FC = () => {
         ...userData,
         email: user.email || ''
       });
-      setReadings(historyData || []);
+      
+      // Mapeia para garantir compatibilidade entre ai_response e output_data
+      const formattedReadings = (historyData || []).map((item: any) => ({
+          ...item,
+          ai_response: item.output_data || item.ai_response // Unifica os campos
+      }));
+
+      setReadings(formattedReadings);
 
     } catch (error) {
       console.error("Erro ao carregar grimório:", error);
@@ -91,6 +98,87 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  // --- NOVA FUNÇÃO INTELIGENTE PARA IDENTIFICAR O TIPO DE JOGO ---
+  const getCardInfo = (item: Reading) => {
+    let label = 'ORÁCULO';
+    let title = 'Leitura realizada';
+    let icon = <Sparkles size={14} />;
+    let colorClass = 'bg-purple-900/30 border-purple-500/30 text-purple-300';
+
+    switch (item.type) {
+      case 'dream':
+      case 'sonho':
+        label = 'SONHO';
+        title = item.input_data?.dreamText || "Sonho sem título";
+        icon = <Moon size={14} />;
+        colorClass = 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300';
+        break;
+        
+      case 'tarot': // Templo de Afrodite (9 Cartas)
+        label = 'TEMPLO DE AFRODITE';
+        title = item.input_data?.question || "Consulta Geral";
+        icon = <Sparkles size={14} />;
+        colorClass = 'bg-purple-900/30 border-purple-500/30 text-purple-300';
+        break;
+
+      case 'tirada_ex':
+        label = 'TIRADA DO EX';
+        title = item.input_data?.question || "Questão sobre Ex";
+        icon = <HeartCrack size={14} />;
+        colorClass = 'bg-red-900/30 border-red-500/30 text-red-300';
+        break;
+
+      case 'fofoca_amor':
+        label = 'FOFOCA DO AMOR';
+        title = item.input_data?.question || "O que ele(a) pensa?";
+        icon = <MessageCircle size={14} />;
+        colorClass = 'bg-pink-900/30 border-pink-500/30 text-pink-300';
+        break;
+
+      case 'metodo_mensal':
+        label = 'PREVISÃO MENSAL';
+        title = item.input_data?.question || "Energia do Mês";
+        icon = <Calendar size={14} />;
+        colorClass = 'bg-cyan-900/30 border-cyan-500/30 text-cyan-300';
+        break;
+      
+      case 'vale_a_pena':
+        label = 'VALE A PENA?';
+        title = item.input_data?.question || "Investir ou não?";
+        icon = <HelpCircle size={14} />;
+        colorClass = 'bg-yellow-900/30 border-yellow-500/30 text-yellow-300';
+        break;
+
+      case 'ficar_ou_partir':
+        label = 'FICAR OU PARTIR';
+        title = item.input_data?.question || "Dúvida de Caminho";
+        icon = <Split size={14} />;
+        colorClass = 'bg-fuchsia-900/30 border-fuchsia-500/30 text-fuchsia-300';
+        break;
+
+      case 'metodo_ferradura':
+        label = 'FERRADURA';
+        title = item.input_data?.question || "Evolução da Situação";
+        icon = <Anchor size={14} />;
+        colorClass = 'bg-blue-900/30 border-blue-500/30 text-blue-300';
+        break;
+
+      default:
+        label = 'CONSULTA';
+        title = item.input_data?.question || "Leitura realizada";
+    }
+
+    // Resumo da resposta para exibir abaixo do título
+    let summary = "";
+    if (item.type === 'dream' || item.type === 'sonho') {
+        summary = item.ai_response?.interpretation || "Interpretação indisponível";
+    } else {
+        summary = item.ai_response?.summary || item.ai_response?.intro || "Leitura realizada com sucesso.";
+    }
+
+    return { label, title, icon, colorClass, summary };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0c29] text-purple-200">
@@ -109,7 +197,6 @@ const Dashboard: React.FC = () => {
         isOpen={showPlans} 
         onClose={() => setShowPlans(false)}
         onSelectPlan={(planId) => {
-          // Aqui abriria o checkout real, mas o modal já cuida disso internamente
           setShowPlans(false);
         }}
       />
@@ -155,7 +242,7 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
         
-        {/* --- NOVO: BOTÃO DE AÇÃO PRINCIPAL --- */}
+        {/* BOTÃO DE AÇÃO PRINCIPAL */}
         <div className="bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500/50 p-6 rounded-2xl shadow-2xl relative overflow-hidden flex items-center justify-between group cursor-pointer"
              onClick={() => navigate('/nova-leitura')}>
            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -248,7 +335,7 @@ const Dashboard: React.FC = () => {
               <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400 text-lg mb-6">Seu grimório está vazio.</p>
               <button 
-                onClick={() => navigate('/nova-leitura')} // Agora vai para a seleção de leitura
+                onClick={() => navigate('/nova-leitura')} 
                 className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-full text-base font-bold transition-transform hover:scale-105"
               >
                 Iniciar Jornada
@@ -256,44 +343,40 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-              {readings.map((item) => (
-                <div 
-                  key={item.id} 
-                  onClick={() => setSelectedReading(item)}
-                  className="bg-slate-900/80 border border-white/5 p-5 lg:p-6 rounded-2xl hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group cursor-pointer relative overflow-hidden shadow-md hover:shadow-purple-900/20"
-                >
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 group-hover:text-purple-400 transition-colors">
-                    <ChevronRight size={24} />
-                  </div>
-
-                  <div className="flex justify-between items-start mb-3 pr-10">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-md text-[10px] lg:text-xs font-bold uppercase tracking-wider border ${
-                        item.type === 'tarot' ? 'bg-purple-900/30 border-purple-500/30 text-purple-300' : 'bg-blue-900/30 border-blue-500/30 text-blue-300'
-                      }`}>
-                        {item.type === 'tarot' ? 'Tarot' : 'Sonho'}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                          {formatDate(item.created_at)}
-                      </span>
+              {readings.map((item) => {
+                const info = getCardInfo(item);
+                
+                return (
+                  <div 
+                    key={item.id} 
+                    onClick={() => setSelectedReading(item)}
+                    className="bg-slate-900/80 border border-white/5 p-5 lg:p-6 rounded-2xl hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group cursor-pointer relative overflow-hidden shadow-md hover:shadow-purple-900/20"
+                  >
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 group-hover:text-purple-400 transition-colors">
+                      <ChevronRight size={24} />
                     </div>
+
+                    <div className="flex justify-between items-start mb-3 pr-10">
+                      <div className="flex items-center gap-3">
+                        <span className={`px-3 py-1 rounded-md text-[10px] lg:text-xs font-bold uppercase tracking-wider border flex items-center gap-1 ${info.colorClass}`}>
+                          {info.icon} {info.label}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                            {formatDate(item.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-white font-medium text-lg lg:text-xl mb-2 pr-8 truncate">
+                      "{info.title}"
+                    </p>
+                    
+                    <p className="text-slate-400 text-xs lg:text-sm line-clamp-2 pr-8 leading-relaxed">
+                      {info.summary}
+                    </p>
                   </div>
-                  
-                  <p className="text-white font-medium text-lg lg:text-xl mb-2 pr-8 truncate">
-                    {item.type === 'tarot' 
-                      ? item.input_data?.question 
-                      : `"${item.input_data?.dreamText?.substring(0, 40)}..."`
-                    }
-                  </p>
-                  
-                  <p className="text-slate-400 text-xs lg:text-sm line-clamp-2 pr-8 leading-relaxed">
-                    {item.type === 'tarot' 
-                      ? item.ai_response?.summary 
-                      : item.ai_response?.interpretation
-                    }
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
