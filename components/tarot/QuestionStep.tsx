@@ -36,7 +36,7 @@ const QuestionStep: React.FC<QuestionStepProps> = ({ question, setQuestion, onNe
       {/* Botão Voltar Estilizado */}
       <div className="w-full flex justify-end mt-12 max-w-2xl">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/nova-leitura')}
           className="flex items-center gap-2 bg-slate-800/50 border border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white transition-all text-sm font-medium px-6 py-2 rounded-full shadow-sm backdrop-blur-sm"
         >
           <ArrowLeft size={16} />
@@ -48,3 +48,4 @@ const QuestionStep: React.FC<QuestionStepProps> = ({ question, setQuestion, onNe
 };
 
 export default QuestionStep;
+
