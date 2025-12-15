@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { User, Star, History, Calendar, Phone, Mail, Sparkles, LogOut, Plus, ChevronRight, Edit2, PlayCircle, Moon, HeartCrack, MessageCircle, Anchor, Split, HelpCircle } from 'lucide-react';
+import { User, Star, History, Calendar, Phone, Mail, Sparkles, LogOut, Plus, ChevronRight, Edit2, PlayCircle, Moon, HeartCrack, MessageCircle, Anchor, Split, HelpCircle, Sun } from 'lucide-react';
 import PlansModal from '../components/PlansModal';
 import ReadingModal from '../components/ReadingModal';
 import EditProfileModal from '../components/EditProfileModal';
+import DailyCardModal from '../components/DailyCardModal'; // Import DailyCardModal
 
 interface UserProfile {
   id: string;
@@ -18,11 +19,11 @@ interface UserProfile {
 
 interface Reading {
   id: string;
-  type: string; // Alterado para string genérica para aceitar todos os tipos
+  type: string; 
   created_at: string;
   input_data: any;
-  output_data: any; // Ajustado para bater com o historyService
-  ai_response?: any; // Mantido para compatibilidade com registros antigos
+  output_data: any; 
+  ai_response?: any; 
 }
 
 const Dashboard: React.FC = () => {
@@ -34,6 +35,10 @@ const Dashboard: React.FC = () => {
   const [showPlans, setShowPlans] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [selectedReading, setSelectedReading] = useState<Reading | null>(null);
+  
+  // States for Daily Card
+  const [showDailyCard, setShowDailyCard] = useState(false);
+  const [dailyCardDone, setDailyCardDone] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -70,13 +75,19 @@ const Dashboard: React.FC = () => {
         email: user.email || ''
       });
       
-      // Mapeia para garantir compatibilidade entre ai_response e output_data
       const formattedReadings = (historyData || []).map((item: any) => ({
           ...item,
-          ai_response: item.output_data || item.ai_response // Unifica os campos
+          ai_response: item.output_data || item.ai_response 
       }));
 
       setReadings(formattedReadings);
+
+      // Check if Daily Card was already drawn today
+      const today = new Date().toDateString();
+      const hasDailyCard = formattedReadings.find((r: Reading) => 
+        r.type === 'carta_do_dia' && new Date(r.created_at).toDateString() === today
+      );
+      setDailyCardDone(!!hasDailyCard);
 
     } catch (error) {
       console.error("Erro ao carregar grimório:", error);
@@ -98,7 +109,6 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  // --- NOVA FUNÇÃO INTELIGENTE PARA IDENTIFICAR O TIPO DE JOGO ---
   const getCardInfo = (item: Reading) => {
     let label = 'ORÁCULO';
     let title = 'Leitura realizada';
@@ -106,6 +116,12 @@ const Dashboard: React.FC = () => {
     let colorClass = 'bg-purple-900/30 border-purple-500/30 text-purple-300';
 
     switch (item.type) {
+      case 'carta_do_dia': // Case for Daily Card
+        label = 'CARTA DO DIA';
+        title = "Energia Diária";
+        icon = <Sun size={14} />;
+        colorClass = 'bg-amber-900/30 border-amber-500/30 text-amber-300';
+        break;
       case 'dream':
       case 'sonho':
         label = 'SONHO';
@@ -113,62 +129,53 @@ const Dashboard: React.FC = () => {
         icon = <Moon size={14} />;
         colorClass = 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300';
         break;
-        
-      case 'tarot': // Templo de Afrodite (9 Cartas)
+      case 'tarot': 
         label = 'TEMPLO DE AFRODITE';
         title = item.input_data?.question || "Consulta Geral";
         icon = <Sparkles size={14} />;
         colorClass = 'bg-purple-900/30 border-purple-500/30 text-purple-300';
         break;
-
       case 'tirada_ex':
         label = 'TIRADA DO EX';
         title = item.input_data?.question || "Questão sobre Ex";
         icon = <HeartCrack size={14} />;
         colorClass = 'bg-red-900/30 border-red-500/30 text-red-300';
         break;
-
       case 'fofoca_amor':
         label = 'FOFOCA DO AMOR';
         title = item.input_data?.question || "O que ele(a) pensa?";
         icon = <MessageCircle size={14} />;
         colorClass = 'bg-pink-900/30 border-pink-500/30 text-pink-300';
         break;
-
       case 'metodo_mensal':
         label = 'PREVISÃO MENSAL';
         title = item.input_data?.question || "Energia do Mês";
         icon = <Calendar size={14} />;
         colorClass = 'bg-cyan-900/30 border-cyan-500/30 text-cyan-300';
         break;
-      
       case 'vale_a_pena':
         label = 'VALE A PENA?';
         title = item.input_data?.question || "Investir ou não?";
         icon = <HelpCircle size={14} />;
         colorClass = 'bg-yellow-900/30 border-yellow-500/30 text-yellow-300';
         break;
-
       case 'ficar_ou_partir':
         label = 'FICAR OU PARTIR';
         title = item.input_data?.question || "Dúvida de Caminho";
         icon = <Split size={14} />;
         colorClass = 'bg-fuchsia-900/30 border-fuchsia-500/30 text-fuchsia-300';
         break;
-
       case 'metodo_ferradura':
         label = 'FERRADURA';
         title = item.input_data?.question || "Evolução da Situação";
         icon = <Anchor size={14} />;
         colorClass = 'bg-blue-900/30 border-blue-500/30 text-blue-300';
         break;
-
       default:
         label = 'CONSULTA';
         title = item.input_data?.question || "Leitura realizada";
     }
 
-    // Resumo da resposta para exibir abaixo do título
     let summary = "";
     if (item.type === 'dream' || item.type === 'sonho') {
         summary = item.ai_response?.interpretation || "Interpretação indisponível";
@@ -214,6 +221,14 @@ const Dashboard: React.FC = () => {
         onUpdate={fetchDashboardData} 
       />
 
+      {/* Daily Card Modal */}
+      <DailyCardModal 
+        isOpen={showDailyCard} 
+        onClose={() => setShowDailyCard(false)} 
+        user={profile} 
+        onSuccess={fetchDashboardData} 
+      />
+
       {/* Header */}
       <header className="bg-slate-950/50 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
@@ -242,7 +257,7 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
         
-        {/* BOTÃO DE AÇÃO PRINCIPAL */}
+        {/* Main Action Button */}
         <div className="bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500/50 p-6 rounded-2xl shadow-2xl relative overflow-hidden flex items-center justify-between group cursor-pointer"
              onClick={() => navigate('/nova-leitura')}>
            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -259,7 +274,7 @@ const Dashboard: React.FC = () => {
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           
-          {/* Card de Créditos */}
+          {/* Credit Balance Card */}
           <div className="bg-slate-900/60 border border-purple-500/30 p-6 lg:p-8 rounded-2xl shadow-lg relative overflow-hidden group flex flex-col justify-between min-h-[200px]">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <Star size={80} />
@@ -279,8 +294,35 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          {/* Card de Perfil */}
-          <div className="md:col-span-2 bg-slate-900/60 border border-white/10 p-6 lg:p-8 rounded-2xl shadow-lg relative group flex flex-col justify-center min-h-[200px]">
+          {/* Daily Card Bonus */}
+          <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 border border-amber-500/30 p-6 lg:p-8 rounded-2xl shadow-lg relative overflow-hidden group flex flex-col justify-between min-h-[200px]">
+             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Sun size={80} /></div>
+             <div>
+                <h3 className="text-amber-200/80 text-xs lg:text-sm uppercase tracking-wider mb-2 font-bold flex items-center gap-2">
+                   <Sparkles size={14} className="text-amber-400" /> Bônus Diário
+                </h3>
+                <h2 className="text-2xl lg:text-3xl font-serif font-bold text-white leading-tight mb-1">
+                   {dailyCardDone ? "Carta Revelada" : "Carta da Sorte"}
+                </h2>
+                <p className="text-amber-100/70 text-sm">
+                   {dailyCardDone ? "Volte amanhã para mais." : "Sua mensagem do universo para hoje."}
+                </p>
+             </div>
+             <button 
+               onClick={() => dailyCardDone ? alert("Você já tirou sua carta hoje! Veja no histórico.") : setShowDailyCard(true)}
+               disabled={dailyCardDone}
+               className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border ${
+                 dailyCardDone 
+                   ? 'bg-white/5 text-slate-400 border-white/5 cursor-not-allowed' 
+                   : 'bg-amber-600 hover:bg-amber-500 text-white border-amber-400/50 shadow-lg shadow-amber-900/20'
+               }`}
+             >
+               {dailyCardDone ? "Já Resgatado" : "Tirar Carta Grátis"}
+             </button>
+          </div>
+
+          {/* Profile Card */}
+          <div className="bg-slate-900/60 border border-white/10 p-6 lg:p-8 rounded-2xl shadow-lg relative group flex flex-col justify-center min-h-[200px]">
             
             <button 
               onClick={() => setShowEditProfile(true)}
@@ -294,7 +336,7 @@ const Dashboard: React.FC = () => {
               <User size={16} /> Dados do Viajante
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+            <div className="flex flex-col gap-3">
               <div className="flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/5">
                 <Mail className="text-purple-400 shrink-0" size={24} />
                 <div className="overflow-hidden">
@@ -310,21 +352,11 @@ const Dashboard: React.FC = () => {
                   <p className="text-sm lg:text-base text-slate-200 truncate">{profile?.whatsapp || '-'}</p>
                   </div>
               </div>
-
-              <div className="flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/5 md:col-span-2 lg:col-span-1">
-                  <Calendar className="text-blue-400 shrink-0" size={24} />
-                  <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-bold">Nascimento</p>
-                  <p className="text-sm lg:text-base text-slate-200">
-                      {profile?.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : '-'}
-                  </p>
-                  </div>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Histórico */}
+        {/* History */}
         <div>
           <h2 className="text-xl lg:text-3xl font-serif text-white mb-6 flex items-center gap-3">
             <History className="text-purple-400" size={28} /> Histórico
