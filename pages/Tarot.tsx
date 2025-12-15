@@ -137,21 +137,15 @@ const Tarot: React.FC = () => {
     if (typeof revealedCount === 'number') setRevealedLocal(revealedCount);
   }, [revealedCount]);
 
-  // --- 2. NAVEGAÇÃO (CORRIGIDA) ---
+  // --- 2. NAVEGAÇÃO ---
 
-  const handleStepBack = (e?: any) => {
-    // Previne comportamento padrão caso venha de um formulário
-    if (e && e.preventDefault) e.preventDefault();
-
+  const handleStepBack = () => {
     if (step === 'question') {
-      // 1. Navega PRIMEIRO para garantir que a mudança de página ocorra
-      navigate('/nova-leitura');
-      
-      // 2. Limpa o estado DEPOIS (em background) para não travar a navegação
+      // Small delay to ensure navigation starts before state reset could interfere
       setTimeout(() => {
-        handleNewReading();
-      }, 50);
-      
+          handleNewReading();
+      }, 100);
+      navigate('/nova-leitura');
     } else if (step === 'selection') {
       setQuestion(''); 
       setSelectedCards([]); 
