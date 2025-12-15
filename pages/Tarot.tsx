@@ -39,9 +39,9 @@ const Tarot: React.FC = () => {
   const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
-  
+   
   const [revealedLocal, setRevealedLocal] = useState<number>(revealedCount || 0);
-  
+   
   const [showPlans, setShowPlans] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
@@ -137,12 +137,21 @@ const Tarot: React.FC = () => {
     if (typeof revealedCount === 'number') setRevealedLocal(revealedCount);
   }, [revealedCount]);
 
-  // --- 2. NAVEGAÇÃO ---
+  // --- 2. NAVEGAÇÃO (CORRIGIDA) ---
 
-  const handleStepBack = () => {
+  const handleStepBack = (e?: any) => {
+    // Previne comportamento padrão caso venha de um formulário
+    if (e && e.preventDefault) e.preventDefault();
+
     if (step === 'question') {
-      handleNewReading();
+      // 1. Navega PRIMEIRO para garantir que a mudança de página ocorra
       navigate('/nova-leitura');
+      
+      // 2. Limpa o estado DEPOIS (em background) para não travar a navegação
+      setTimeout(() => {
+        handleNewReading();
+      }, 50);
+      
     } else if (step === 'selection') {
       setQuestion(''); 
       setSelectedCards([]); 
@@ -233,19 +242,12 @@ const Tarot: React.FC = () => {
     }
   };
 
-  // --- 4. RENDERIZAÇÃO (Ajuste de Altura Aplicado) ---
-  // Removido 'min-h-screen' e substituído por 'w-full flex flex-col items-center relative'
-  // Isso faz o container ter apenas a altura do conteúdo, eliminando o espaço vazio roxo.
+  // --- 4. RENDERIZAÇÃO ---
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 w-full flex flex-col items-center relative overflow-x-hidden scrollbar-hide">
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
       <AuthModal 
