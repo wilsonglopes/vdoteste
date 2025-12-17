@@ -21,7 +21,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
           </p>
 
           <h2 className="font-serif text-4xl md:text-6xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-            Descubra o Oculto
+            Desvende seus Caminhos
           </h2>
 
           <p className="text-slate-400 max-w-lg mx-auto font-light leading-relaxed">

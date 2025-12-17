@@ -3,7 +3,7 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { Moon, Star, User, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import InstallButton from './InstallButton'; // <--- Importação Nova
+import InstallButton from './InstallButton'; 
 
 interface LayoutProps {
   children: ReactNode;
@@ -91,12 +91,36 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-col items-center w-full max-w-5xl mx-auto px-4 pb-6 pt-0">
+      {/* Main Content */}
+      <main className="relative z-10 flex flex-col items-center w-full max-w-5xl mx-auto px-4 pb-6 pt-0 flex-grow">
         {children}
       </main>
 
-      <footer className="relative z-10 w-full text-center py-6 text-slate-600 text-xs mb-4">
-        <p>© {new Date().getFullYear()} Vozes do Oráculo. Conexão estabelecida.</p>
+      {/* Footer Oficial */}
+      <footer className="relative z-10 bg-black py-8 border-t border-white/10 text-center md:text-left mt-auto">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+          
+          <div className="text-slate-500 text-sm">
+            © {new Date().getFullYear()} Vozes do Oráculo. Todos os direitos reservados.
+          </div>
+
+          <div className="flex gap-6 text-sm">
+            <a href="/#/privacidade" className="text-slate-400 hover:text-purple-400 transition-colors">
+              Política de Privacidade
+            </a>
+            <a href="/#/termos" className="text-slate-400 hover:text-purple-400 transition-colors">
+              Termos de Uso
+            </a>
+          </div>
+          
+        </div>
+        
+        {/* Disclaimer Obrigatório Pequeno no Rodapé */}
+        <div className="max-w-4xl mx-auto mt-6 text-center px-4">
+          <p className="text-[10px] text-slate-600 uppercase tracking-widest">
+            Este site é para fins de entretenimento. Não substituímos aconselhamento profissional.
+          </p>
+        </div>
       </footer>
     </div>
   );

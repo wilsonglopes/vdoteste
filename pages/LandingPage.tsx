@@ -106,16 +106,16 @@ const LandingPage: React.FC = () => {
 
         <div className="w-full max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
           <div className="text-center mb-20">
-            <h2 className="text-3xl md:text-6xl font-serif text-white mb-4 uppercase tracking-wide">O Que Vamos Revelar?</h2>
-            <p className="text-purple-300/80 text-sm md:text-base uppercase tracking-widest">Use seus créditos grátis em qualquer área</p>
+            <h2 className="text-3xl md:text-6xl font-serif text-white mb-4 uppercase tracking-wide">Símbolos para reflexão pessoal</h2>
+            <p className="text-purple-300/80 text-sm md:text-base uppercase tracking-widest">Cada carta representa um tema para reflexão pessoal</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full">
             {[
-              { title: "O Futuro", subtitle: "O SOL", img: CARD_IMAGES.FUTURO, desc: "Reflexões sobre vitalidade, energia e clareza." },
-              { title: "Amor", subtitle: "O CORAÇÃO", img: CARD_IMAGES.AMOR, desc: "Temas relacionados a sentimentos, vínculos e afetos." },
-              { title: "Finanças", subtitle: "OS PEIXES", img: CARD_IMAGES.FINANCAS, desc: "Simbologia ligada a movimento, fluxo e possibilidades." },
-              { title: "Destino", subtitle: "A CHAVE", img: CARD_IMAGES.DESTINO, desc: "Representações de abertura, escolhas e novos caminhos." },
+              { title: "Caminhos & Possibilidades", subtitle: "O SOL", img: CARD_IMAGES.FUTURO, desc: "Reflexões sobre vitalidade, energia e clareza." },
+              { title: "Relações & Emoções", subtitle: "O CORAÇÃO", img: CARD_IMAGES.AMOR, desc: "Temas ligados a sentimentos, vínculos e afetos." },
+              { title: "Movimento & Recursos", subtitle: "OS PEIXES", img: CARD_IMAGES.FINANCAS, desc: "Simbolismos sobre fluxo, decisões e organização." },
+              { title: "Escolhas & Direções", subtitle: "A CHAVE", img: CARD_IMAGES.DESTINO, desc: "Reflexões sobre caminhos, alternativas e mudanças." },
             ].map((card, i) => (
               <motion.div 
                 key={i}
@@ -278,39 +278,39 @@ const LandingPage: React.FC = () => {
       {/* ================= DEPOIMENTOS ================= */}
       <section className="relative w-screen left-1/2 -translate-x-1/2 py-24 bg-[#0a0a0a] border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl md:text-5xl font-serif text-center mb-16 text-white">Resultados Reais</h2>
+          <h2 className="text-3xl md:text-5xl font-serif text-center mb-16 text-white">Depoimentos</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 name: "Renata V.",
                 img: "https://randomuser.me/api/portraits/women/65.jpg",
-                text: "Eu estava cética. Nunca imaginei que uma leitura online pudesse ser tão precisa. As cartas descreveram exatamente a situação com meu marido.",
+                text: "Eu estava cética no início. A leitura trouxe reflexões profundas e me ajudou a enxergar minha situação com mais clareza emocional.",
               },
               {
                 name: "Marcos A.",
                 img: "https://randomuser.me/api/portraits/men/44.jpg",
-                text: "A tiragem de carreira abriu meus olhos. Eu estava preso em um emprego tóxico por medo. O oráculo me deu a confirmação que eu precisava.",
+                text: "A tiragem de carreira trouxe reflexões importantes. Eu estava vivendo um momento difícil no trabalho e a leitura me ajudou a olhar para essa situação com mais consciência.",
               },
               {
                 name: "Juliana K.",
                 img: "https://randomuser.me/api/portraits/women/90.jpg",
-                text: "Impressionante a precisão. Perguntei sobre uma pessoa do passado e a resposta foi cirúrgica. Tirei um peso das costas.",
+                text: "A experiência foi marcante. Ao refletir sobre uma situação do passado, a leitura me trouxe alívio e uma nova perspectiva emocional.",
               },
               {
                 name: "Patrícia L.",
                 img: "https://randomuser.me/api/portraits/women/22.jpg",
-                text: "Uso toda semana para ver a energia do meu relacionamento. É incrível como bate tudo. Me ajuda a evitar brigas.",
+                text: "Costumo usar com frequência para refletir sobre meu relacionamento. A leitura me ajuda a compreender melhor as emoções envolvidas e agir com mais equilíbrio.",
               },
               {
                 name: "Eduardo S.",
                 img: "https://randomuser.me/api/portraits/men/86.jpg",
-                text: "A interpretação é muito profunda, não é aquelas coisas genéricas de horóscopo. Fala direto com a sua alma.",
+                text: "A interpretação é detalhada e foge do óbvio. A experiência é envolvente e convida a uma conexão mais profunda com as próprias emoções.",
               },
               {
                 name: "Camila T.",
                 img: "https://randomuser.me/api/portraits/women/12.jpg",
-                text: "Estava em dúvida entre dois caminhos. O jogo da ferradura me mostrou as consequências de cada um. Escolhi com paz.",
+                text: "Eu estava em dúvida entre dois caminhos. A leitura trouxe reflexões sobre cada possibilidade e me ajudou a tomar uma decisão com mais tranquilidade."
               }
             ].map((user, i) => (
               <div key={i} className="bg-[#121214] p-6 rounded-2xl border border-white/5 hover:border-purple-500/20 transition-all">
@@ -349,9 +349,31 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      <footer className="relative w-screen left-1/2 -translate-x-1/2 py-10 text-center border-t border-white/10 bg-black text-slate-600 text-xs">
-        <p>&copy; 2025 Vozes do Oráculo. Todos os direitos reservados.</p>
-      </footer>
+      <footer className="bg-black py-8 border-t border-white/10 text-center md:text-left">
+  <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+    
+    <div className="text-slate-500 text-sm">
+      © {new Date().getFullYear()} Vozes do Oráculo. Todos os direitos reservados.
+    </div>
+
+    <div className="flex gap-6 text-sm">
+      <a href="/#/privacidade" className="text-slate-400 hover:text-purple-400 transition-colors">
+        Política de Privacidade
+      </a>
+      <a href="/#/termos" className="text-slate-400 hover:text-purple-400 transition-colors">
+        Termos de Uso
+      </a>
+    </div>
+    
+  </div>
+  
+  {/* Disclaimer Obrigatório Pequeno no Rodapé */}
+  <div className="max-w-4xl mx-auto mt-6 text-center px-4">
+    <p className="text-[10px] text-slate-600 uppercase tracking-widest">
+      Este site é para fins de entretenimento. Não substituímos aconselhamento profissional.
+    </p>
+  </div>
+</footer>
     </div>
   );
 };

@@ -6,6 +6,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import LandingPage from './pages/LandingPage';
 import Home from './pages/Home';
 import Dreams from './pages/Dreams';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfUse from './pages/legal/TermsOfUse';
 import SelectSpread from './pages/SelectSpread';
 import { supabase } from './services/supabase';
 
@@ -77,6 +79,8 @@ const App: React.FC = () => {
               <Route path="/tarot-mensal" element={<TarotMensal />} />
               <Route path="/tarot-ferradura" element={<TarotFerradura />} />
               <Route path="/tarot-fofoca" element={<TarotFofoca />} />
+              <Route path="/privacidade" element={<PrivacyPolicy />} />
+              <Route path="/termos" element={<TermsOfUse />} />
               <Route path="/tarot-ficar-partir" element={<TarotFicarPartir />} />
 
               {/* Outros Serviços */}
@@ -104,3 +108,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

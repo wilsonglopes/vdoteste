@@ -1,133 +1,163 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sparkles, Calendar, AlignLeft, HelpCircle } from 'lucide-react';
+import { X, Calendar, MessageSquare, Sparkles, ScrollText, Moon } from 'lucide-react';
 
 interface ReadingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  reading: any; // O objeto da leitura selecionada
+  reading: any; // Usamos any aqui para flexibilidade com os formatos antigos e novos
 }
 
 const ReadingModal: React.FC<ReadingModalProps> = ({ isOpen, onClose, reading }) => {
   if (!isOpen || !reading) return null;
 
-  const isTarot = reading.type === 'tarot';
-  const date = new Date(reading.created_at).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-  });
+  // --- 1. LÓGICA DE EXTRAÇÃO DE DADOS ---
+  // Esta função descobre onde está o texto da PERGUNTA/RELATO
+  const getUserInput = () => {
+    if (!reading.input_data) return "Sem dados de entrada.";
+
+    // Se for sonho
+    if (reading.type === 'dream' || reading.type === 'sonho') {
+      return reading.input_data.dreamText || "Relato não encontrado.";
+    }
+
+    // Se for qualquer tipo de Tarot
+    return reading.input_data.question || "Pergunta não encontrada.";
+  };
+
+  // Esta função descobre onde está a RESPOSTA DA IA
+  const getOracleResponse = () => {
+    // Tenta pegar de output_data (novo) ou ai_response (antigo)
+    const response = reading.output_data || reading.ai_response;
+
+    if (!response) return "Ainda não há interpretação para este item.";
+
+    // Se for sonho (estrutura simples)
+    if (reading.type === 'dream' || reading.type === 'sonho') {
+      return response.interpretation || typeof response === 'string' ? response : "Erro ao ler interpretação.";
+    }
+
+    // Se for Tarot (estrutura JSON complexa)
+    if (response.summary) {
+      return (
+        <div className="space-y-4">
+          <p className="font-medium text-purple-200">{response.summary}</p>
+          
+          {/* Se tiver conselho, mostra destacado */}
+          {response.advice && (
+            <div className="bg-purple-900/30 border-l-4 border-purple-500 p-4 rounded-r-lg">
+              <h4 className="text-sm font-bold text-purple-400 mb-1 uppercase">Conselho</h4>
+              <p className="italic text-slate-300">{response.advice}</p>
+            </div>
+          )}
+
+          {/* Se quiser mostrar detalhes das cartas (opcional) */}
+          {response.individual_cards && response.individual_cards.length > 0 && (
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <h4 className="text-sm font-bold text-slate-400 mb-3 uppercase">Cartas Reveladas</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                {response.individual_cards.map((card: any, idx: number) => (
+                  <li key={idx}>
+                    <span className="text-purple-300 font-bold">{card.card_name}:</span> {card.interpretation}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Fallback se for string antiga
+    return typeof response === 'string' ? response : JSON.stringify(response);
+  };
+
+  // --- 2. FORMATAÇÃO ---
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getTitle = () => {
+    switch (reading.type) {
+      case 'dream':
+      case 'sonho': return 'Interpretação de Sonho';
+      case 'carta_do_dia': return 'Carta do Dia';
+      default: return 'Leitura de Tarot';
+    }
+  };
+
+  const isDream = reading.type === 'dream' || reading.type === 'sonho';
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        {/* Backdrop Escuro */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm"
-        />
-
-        {/* Janela do Modal */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-3xl bg-slate-900 border border-purple-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
-        >
-          {/* Cabeçalho */}
-          <div className="p-6 border-b border-white/10 bg-slate-950/50 flex justify-between items-start">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-2xl bg-[#0f0f12] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${isDream ? 'bg-indigo-500/20 text-indigo-400' : 'bg-purple-500/20 text-purple-400'}`}>
+              {isDream ? <Moon size={20} /> : <Sparkles size={20} />}
+            </div>
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                  isTarot ? 'bg-purple-900/50 text-purple-300' : 'bg-blue-900/50 text-blue-300'
-                }`}>
-                  {isTarot ? 'Baralho Cigano' : 'Interpretação de Sonho'}
-                </span>
-                <span className="text-slate-500 text-xs flex items-center gap-1">
-                  <Calendar size={12} /> {date}
-                </span>
+              <h3 className="text-lg font-serif font-bold text-white">{getTitle()}</h3>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <Calendar size={12} />
+                <span>{formatDate(reading.created_at)}</span>
               </div>
-              <h3 className="text-xl font-serif text-white">
-                {isTarot ? "Detalhes da Leitura" : "Detalhes do Sonho"}
-              </h3>
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-white p-1">
-              <X size={24} />
-            </button>
+          </div>
+          <button 
+            onClick={onClose}
+            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Conteúdo com Scroll */}
+        <div className="p-6 overflow-y-auto custom-scrollbar space-y-8">
+          
+          {/* Seção: Pergunta / Relato */}
+          <div className="space-y-3">
+            <h4 className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <MessageSquare size={14} />
+              {isDream ? "Seu Relato" : "Sua Pergunta"}
+            </h4>
+            <div className="bg-white/5 border border-white/5 rounded-xl p-4 text-slate-200 leading-relaxed italic">
+              "{getUserInput()}"
+            </div>
           </div>
 
-          {/* Conteúdo com Scroll */}
-          <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
-            
-            {/* 1. A Pergunta ou O Sonho */}
-            <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-              <h4 className="text-sm uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-2">
-                {isTarot ? <HelpCircle size={14} /> : <AlignLeft size={14} />}
-                {isTarot ? "Sua Pergunta" : "Seu Relato"}
-              </h4>
-              <p className="text-slate-200 italic">
-                "{isTarot ? reading.input_data?.question : reading.input_data?.dreamText}"
-              </p>
+          {/* Seção: Resposta do Oráculo */}
+          <div className="space-y-3">
+            <h4 className="flex items-center gap-2 text-xs font-bold text-purple-400 uppercase tracking-wider">
+              <ScrollText size={14} />
+              Resposta do Oráculo
+            </h4>
+            <div className="bg-gradient-to-b from-purple-900/10 to-transparent border border-purple-500/10 rounded-xl p-5 text-slate-300 leading-relaxed">
+              {getOracleResponse()}
             </div>
-
-            {/* 2. O Resultado (Lógica Diferente para Tarot e Sonho) */}
-            <div className="space-y-4">
-              <h4 className="text-sm uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-2">
-                {isTarot ? <Sparkles size={14} /> : <Moon size={14} />}
-                Resposta do Oráculo
-              </h4>
-
-              {isTarot ? (
-                // --- LAYOUT TAROT ---
-                <div className="space-y-6 text-slate-300 leading-relaxed">
-                  {reading.ai_response?.intro && (
-                    <p className="bg-purple-900/20 p-4 rounded-lg border-l-2 border-purple-500">
-                      {reading.ai_response.intro}
-                    </p>
-                  )}
-                  
-                  {/* Timeline */}
-                  {reading.ai_response?.timeline && (
-                    <div className="grid gap-4">
-                      <div className="bg-slate-950 p-4 rounded-lg">
-                        <strong className="text-purple-300 block mb-1">Passado / Base</strong>
-                        {reading.ai_response.timeline.past}
-                      </div>
-                      <div className="bg-slate-950 p-4 rounded-lg border border-purple-500/30">
-                        <strong className="text-gold block mb-1">Presente / Foco</strong>
-                        {reading.ai_response.timeline.present}
-                      </div>
-                      <div className="bg-slate-950 p-4 rounded-lg">
-                        <strong className="text-purple-300 block mb-1">Futuro / Tendência</strong>
-                        {reading.ai_response.timeline.future}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Resumo e Conselho */}
-                  <div className="mt-4">
-                    <h5 className="text-white font-bold mb-2">Resumo</h5>
-                    <p className="mb-4">{reading.ai_response?.summary}</p>
-                    
-                    <div className="bg-gold/10 border border-gold/30 p-4 rounded-xl text-center">
-                      <strong className="text-gold text-sm uppercase block mb-2">Conselho Final</strong>
-                      <p className="italic text-white font-serif text-lg">"{reading.ai_response?.advice}"</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // --- LAYOUT SONHO ---
-                <div className="text-slate-300 leading-loose whitespace-pre-wrap bg-slate-950/50 p-6 rounded-xl border border-white/5">
-                  {reading.ai_response?.interpretation}
-                </div>
-              )}
-            </div>
-
           </div>
-        </motion.div>
+
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-white/5 bg-[#0a0a0c] rounded-b-2xl flex justify-end">
+          <button 
+            onClick={onClose}
+            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            Fechar
+          </button>
+        </div>
+
       </div>
-    </AnimatePresence>
+    </div>
   );
 };
 
