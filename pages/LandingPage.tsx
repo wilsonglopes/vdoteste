@@ -29,8 +29,8 @@ const LandingPage: React.FC = () => {
   };
 
   const handleAuthSuccess = () => {
-    // Quando o cadastro terminar com sucesso, vai para o dashboard
-    navigate('/dashboard');
+    // FORÇA O NAVEGADOR A IR PARA O SUBDOMÍNIO
+    window.location.href = 'https://app.vozesdooraculo.com.br';
   };
 
   const fadeInUp = {
