@@ -4,15 +4,15 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import LandingPage from './pages/LandingPage';
-import Home from './pages/Home';
+import Home from './pages/Home'; // Página dos 2 cards
 import Dreams from './pages/Dreams';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import TermsOfUse from './pages/legal/TermsOfUse';
 import SelectSpread from './pages/SelectSpread';
 import { supabase } from './services/supabase';
 
-// --- IMPORT DAS PÁGINAS DE CADA JOGO ---
-import Tarot from './pages/Tarot'; // Templo de Afrodite (9 Cartas) - Padrão
+// Imports dos Jogos
+import Tarot from './pages/Tarot'; 
 import TarotEx from './pages/TarotEx';
 import TarotValePena from './pages/TarotValePena';
 import TarotMensal from './pages/TarotMensal';
@@ -24,15 +24,17 @@ const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // VERIFICAÇÃO DE SUBDOMÍNIO
+  // Se o endereço incluir "app.", consideramos que é o ambiente do sistema
+  const isAppSubdomain = window.location.hostname.includes('app.');
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
@@ -40,72 +42,70 @@ const App: React.FC = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500">
-        Carregando energias...
-      </div>
-    );
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500">Carregando energias...</div>;
   }
 
-  // Wrapper para rotas que EXIGEM login
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!session) {
+      // Se tentar acessar o app sem logar, manda para a Landing Page (site principal)
+      if (isAppSubdomain) {
+         window.location.href = 'https://vozesdooraculo.com.br';
+         return null;
+      }
       return <Navigate to="/" replace />;
     }
     return <>{children}</>;
   };
 
+  // --- CENÁRIO 1: USUÁRIO ACESSOU "VOZESDOORACULO.COM.BR" (Landing Page) ---
+  if (!isAppSubdomain) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/privacidade" element={<PrivacyPolicy />} />
+          <Route path="/termos" element={<TermsOfUse />} />
+          {/* Qualquer outra rota manda volta pra Landing Page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    );
+  }
+
+  // --- CENÁRIO 2: USUÁRIO ACESSOU "APP.VOZESDOORACULO.COM.BR" (Sistema) ---
   return (
     <Router>
       <Routes>
-        
-        {/* 1. ROTA DA LANDING PAGE (SEM LAYOUT/MENU) */}
-        <Route path="/landingpage" element={<LandingPage />} />
-
-        {/* 2. RESTO DO APP (COM LAYOUT/MENU) */}
         <Route path="*" element={
           <Layout user={session?.user}>
             <Routes>
-              {/* Home e Seleção */}
+              {/* A Raiz do App é a Home (2 cards) */}
               <Route path="/" element={<Home user={session?.user} />} />
               
-              {/* Menu de Escolha de Jogo */}
               <Route path="/nova-leitura" element={<SelectSpread />} />
-
-              {/* --- ROTAS DOS JOGOS DE TAROT (INDIVIDUAIS) --- */}
-              <Route path="/tarot" element={<Tarot />} /> {/* Padrão / Templo de Afrodite */}
+              
+              {/* Jogos */}
+              <Route path="/tarot" element={<Tarot />} />
               <Route path="/tarot-ex" element={<TarotEx />} />
               <Route path="/tarot-vale-pena" element={<TarotValePena />} />
               <Route path="/tarot-mensal" element={<TarotMensal />} />
               <Route path="/tarot-ferradura" element={<TarotFerradura />} />
               <Route path="/tarot-fofoca" element={<TarotFofoca />} />
-              <Route path="/privacidade" element={<PrivacyPolicy />} />
-              <Route path="/termos" element={<TermsOfUse />} />
               <Route path="/tarot-ficar-partir" element={<TarotFicarPartir />} />
-
-              {/* Outros Serviços */}
               <Route path="/dreams" element={<Dreams />} />
-              <Route path="/escolher" element={<Home user={session?.user} />} />
+              
+              {/* Dashboard */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminDashboard />} />
 
-              {/* Áreas Protegidas */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-
-              <Route path="/admin" element={<AdminDashboard />} /> 
+              {/* Redirecionamentos Internos */}
+              <Route path="/inicio" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
         } />
-
       </Routes>
     </Router>
   );
 };
 
 export default App;
-
